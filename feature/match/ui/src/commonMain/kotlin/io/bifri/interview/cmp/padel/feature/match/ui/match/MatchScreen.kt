@@ -148,17 +148,17 @@ private fun MatchContent(
     totalCourts: Int?,
     modifier: Modifier = Modifier,
 ) {
-    match ?: return
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
     ) {
-        Court(
-            courtName = match.courtName,
-            totalCourts = totalCourts,
-        )
-        ScoreboardCard(match = match)
+        if (match != null) {
+            Court(
+                courtName = match.courtName,
+                totalCourts = totalCourts,
+            )
+            ScoreboardCard(match = match)
+        }
     }
 }
 

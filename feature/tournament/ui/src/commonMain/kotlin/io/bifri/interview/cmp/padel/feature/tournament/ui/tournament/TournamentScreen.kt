@@ -21,6 +21,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -156,35 +157,36 @@ private fun TournamentContent(
     tournament: Tournament?,
     modifier: Modifier = Modifier,
 ) {
-    tournament ?: return
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
     ) {
-        tournament.photoUrl?.let {
-            SubcomposeAsyncImage(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(TournamentPosterHeight),
-                model = it,
-                contentDescription = stringResource(
-                    TournamentUiRes.string.tournament_poster_cd,
-                    tournament.name.orEmpty(),
-                ),
-                contentScale = ContentScale.Fit,
-                loading = { ShimmerBox(Modifier.matchParentSize()) },
-                error = {
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                    )
-                },
-            )
+        if (tournament != null) {
+            tournament.photoUrl?.let {
+                SubcomposeAsyncImage(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(TournamentPosterHeight),
+                    model = it,
+                    contentDescription = stringResource(
+                        TournamentUiRes.string.tournament_poster_cd,
+                        tournament.name.orEmpty(),
+                    ),
+                    contentScale = ContentScale.Fit,
+                    loading = { ShimmerBox(Modifier.matchParentSize()) },
+                    error = {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                        )
+                    },
+                )
+            }
+            val summary = remember(tournament) { tournament.toTournamentsTournament() }
+            TournamentSummary(summary)
+            TournamentDetails(tournament)
         }
-        TournamentSummary(tournament.toTournamentsTournament())
-        TournamentDetails(tournament)
     }
 }
 
