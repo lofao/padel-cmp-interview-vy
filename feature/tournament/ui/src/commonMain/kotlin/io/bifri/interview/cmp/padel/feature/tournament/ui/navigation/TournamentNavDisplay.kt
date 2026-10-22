@@ -28,6 +28,7 @@ private val TournamentNavConfiguration = SavedStateConfiguration {
 @Composable
 fun TournamentNavDisplay(
     onMatchesClick: (tournamentId: Long, tournamentName: String) -> Unit,
+    onPlayersClick: (tournamentId: Long, tournamentName: String) -> Unit,
     onError: (Throwable) -> Unit,
 ) {
     val backStack = rememberNavBackStack(TournamentNavConfiguration, Tournaments)
@@ -47,6 +48,7 @@ fun TournamentNavDisplay(
                     tournamentId = route.tournamentId,
                     onBackClick = { backStack.pop() },
                     onMatchesClick = { name -> onMatchesClick(route.tournamentId, name) },
+                    onPlayersClick = { name -> onPlayersClick(route.tournamentId, name) },
                     onError = onError,
                 )
             }

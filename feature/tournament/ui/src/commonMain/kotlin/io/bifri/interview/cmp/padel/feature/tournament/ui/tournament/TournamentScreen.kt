@@ -50,6 +50,7 @@ import io.bifri.interview.cmp.padel.feature.tournament.ui.detail_venue
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentNavigationAction.OpenMatches
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentState.UiState
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament_matches_button
+import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament_players_button
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament_poster_cd
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament_screen_title
 import kotlinx.datetime.LocalDate
@@ -63,6 +64,7 @@ fun TournamentRoute(
     tournamentId: Long,
     onBackClick: () -> Unit,
     onMatchesClick: (tournamentName: String) -> Unit,
+    onPlayersClick: (tournamentName: String) -> Unit,
     onError: (Throwable) -> Unit,
     viewModel: TournamentViewModel = koinViewModel(key = tournamentId.toString()) { parametersOf(tournamentId) },
 ) {
@@ -72,12 +74,13 @@ fun TournamentRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onMatchesClick = viewModel::onMatchesClick,
+        onPlayersClick = viewModel::onPlayersClick,
         onRefresh = viewModel::onRefresh,
     )
 
     LifecycleCollectEffect(
         stream = viewModel.events,
-        collector = { processEvents(it, onMatchesClick, onError) },
+        collector = { processEvents(it, onMatchesClick, onPlayersClick, onError) },
     )
 }
 
@@ -86,6 +89,7 @@ private fun TournamentScreen(
     uiState: UiState?,
     onBackClick: () -> Unit,
     onMatchesClick: (tournamentName: String) -> Unit,
+    onPlayersClick: (tournamentName: String) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -130,6 +134,10 @@ private fun TournamentScreen(
                 AssistChip(
                     onClick = { onMatchesClick(uiState.tournament?.name.orEmpty()) },
                     label = { Text(stringResource(TournamentUiRes.string.tournament_matches_button)) },
+                )
+                AssistChip(
+                    onClick = { onPlayersClick(uiState.tournament?.name.orEmpty()) },
+                    label = { Text(stringResource(TournamentUiRes.string.tournament_players_button)) },
                 )
             }
             AppPullToRefreshBox(
@@ -241,11 +249,13 @@ private fun DetailField(label: StringResource, value: String?) {
 private fun processEvents(
     event: Event<TournamentNavigationAction>,
     onMatchesClick: (String) -> Unit,
+    onPlayersClick: (String) -> Unit,
     onError: (Throwable) -> Unit,
 ) {
     val action = event.getContentIfNotHandled() ?: return
     when (action) {
         is OpenMatches -> onMatchesClick(action.tournamentName)
+        is TournamentNavigationAction.OpenPlayers -> onPlayersClick(action.tournamentName)
         is TournamentNavigationAction.ShowError -> onError(action.error)
     }
 }
@@ -274,6 +284,7 @@ private fun TournamentScreenPreview() {
             ),
             onBackClick = {},
             onMatchesClick = {},
+            onPlayersClick = {},
             onRefresh = {},
         )
     }
@@ -290,6 +301,7 @@ private fun TournamentScreenLoadingPreview() {
             ),
             onBackClick = {},
             onMatchesClick = {},
+            onPlayersClick = {},
             onRefresh = {},
         )
     }

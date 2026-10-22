@@ -10,6 +10,7 @@ import io.bifri.interview.cmp.padel.core.ui.base.BaseViewModel
 import io.bifri.interview.cmp.padel.core.ui.input.InputThrottle.DefaultSkipDuration
 import io.bifri.interview.cmp.padel.feature.tournament.domain.usecase.GetTournamentUseCase
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentNavigationAction.OpenMatches
+import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentNavigationAction.OpenPlayers
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentNavigationAction.ShowError
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentPartialState.DataLoaded
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentPartialState.DataLoading
@@ -35,6 +36,7 @@ class TournamentViewModel(
 ) : BaseViewModel(coroutineDispatcher, exceptionHandler) {
     private val refreshes = mutableSharedFlowOfInput<Unit>()
     private val matchesClicks = mutableSharedFlowOfInput<String>()
+    private val playersClicks = mutableSharedFlowOfInput<String>()
     private val state: Flow<TournamentState> = _state
     internal val uiState = state.map { it.uiState }
     internal val events = state.mapNotNull { it.event }
@@ -47,10 +49,15 @@ class TournamentViewModel(
         matchesClicks.tryEmit(tournamentName)
     }
 
+    internal fun onPlayersClick(tournamentName: String) {
+        playersClicks.tryEmit(tournamentName)
+    }
+
     private val _state: Flow<TournamentState>
         get() = merge(
             dataStream(),
             matchesClicksStream(),
+            playersClicksStream(),
         )
             .catch {
                 exceptionHandler.handleException(it)
@@ -99,4 +106,8 @@ class TournamentViewModel(
     private fun matchesClicksStream(): Flow<TournamentPartialState> = matchesClicks
         .throttleTime(DefaultSkipDuration)
         .map { Navigate(OpenMatches(it)) }
+
+    private fun playersClicksStream(): Flow<TournamentPartialState> = playersClicks
+        .throttleTime(DefaultSkipDuration)
+        .map { Navigate(OpenPlayers(it)) }
 }

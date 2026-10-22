@@ -18,6 +18,9 @@ kotlin {
             implementation(projects.feature.tournament.data)
             implementation(projects.feature.tournament.domain)
             implementation(projects.feature.tournament.ui)
+            implementation(projects.feature.player.data)
+            implementation(projects.feature.player.domain)
+            implementation(projects.feature.player.ui)
         }
     }
 }

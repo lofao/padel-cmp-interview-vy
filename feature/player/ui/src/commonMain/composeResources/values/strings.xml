@@ -1,0 +1,10 @@
+<resources>
+    <string name="players_screen_title">Players</string>
+    <string name="players_search_hint">Search players by name</string>
+    <string name="players_clear_search_cd">Clear search</string>
+    <string name="players_empty">No players found</string>
+    <string name="players_rank">Rank #%1$d</string>
+    <string name="players_country">Country: %1$s</string>
+    <string name="players_gender">Gender: %1$s</string>
+    <string name="players_avatar_cd">%1$s avatar</string>
+</resources>

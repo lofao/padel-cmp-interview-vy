@@ -9,6 +9,12 @@ sealed interface AppRoute : NavKey {
     data object TournamentGraph : AppRoute
 
     @Serializable
+    data class PlayerGraph(
+        val tournamentId: Long,
+        val tournamentName: String,
+    ) : AppRoute
+
+    @Serializable
     data class MatchGraph(
         val tournamentId: Long,
         val tournamentName: String,
