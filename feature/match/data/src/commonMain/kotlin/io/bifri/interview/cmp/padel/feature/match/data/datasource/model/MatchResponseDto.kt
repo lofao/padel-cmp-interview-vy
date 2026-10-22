@@ -19,6 +19,7 @@ data class MatchResponseDto(
     ) {
         @Serializable
         data class PlayerDto(
+            @SerialName("id") val id: Long? = null,
             @SerialName("connections") val connections: PlayerConnectionsDto? = null,
             @SerialName("name") val name: String? = null,
         ) {

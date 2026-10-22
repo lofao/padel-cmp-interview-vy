@@ -1,6 +1,7 @@
 package io.bifri.interview.cmp.padel.feature.match.ui.match
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +72,7 @@ fun MatchRoute(
     totalCourts: Int?,
     onBackClick: () -> Unit,
     onError: (Throwable) -> Unit,
+    onPlayerClick: (Long) -> Unit = {},
     viewModel: MatchViewModel = koinViewModel(key = matchId.toString()) {
         parametersOf(matchId, tournamentName, totalCourts)
     },
@@ -81,6 +83,7 @@ fun MatchRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onRefresh = viewModel::onRefresh,
+        onPlayerClick = onPlayerClick,
     )
 
     LifecycleCollectEffect(
@@ -95,6 +98,7 @@ private fun MatchScreen(
     onBackClick: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
+    onPlayerClick: (Long) -> Unit = {},
 ) {
     if (uiState == null) return
 
@@ -138,6 +142,7 @@ private fun MatchScreen(
                     .padding(contentPadding),
                 match = uiState.match,
                 totalCourts = uiState.totalCourts,
+                onPlayerClick = onPlayerClick,
             )
         }
     }
@@ -147,6 +152,7 @@ private fun MatchScreen(
 private fun MatchContent(
     match: Match?,
     totalCourts: Int?,
+    onPlayerClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -158,7 +164,10 @@ private fun MatchContent(
                 courtName = match.courtName,
                 totalCourts = totalCourts,
             )
-            ScoreboardCard(match = match)
+            ScoreboardCard(
+                match = match,
+                onPlayerClick = onPlayerClick,
+            )
         }
     }
 }
@@ -189,7 +198,10 @@ private fun Court(
 }
 
 @Composable
-private fun ScoreboardCard(match: Match) {
+private fun ScoreboardCard(
+    match: Match,
+    onPlayerClick: (Long) -> Unit,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -231,12 +243,14 @@ private fun ScoreboardCard(match: Match) {
                 team = match.teamOne,
                 setGames = match.scores.map { it.teamOneGames },
                 isWinner = match.winnerTeam == TeamOne,
+                onPlayerClick = onPlayerClick,
             )
             HorizontalDivider()
             TeamScoreRow(
                 team = match.teamTwo,
                 setGames = match.scores.map { it.teamTwoGames },
                 isWinner = match.winnerTeam == TeamTwo,
+                onPlayerClick = onPlayerClick,
             )
         }
     }
@@ -247,6 +261,7 @@ private fun TeamScoreRow(
     team: Team?,
     setGames: List<String?>,
     isWinner: Boolean,
+    onPlayerClick: (Long) -> Unit,
 ) {
     team ?: return
 
@@ -263,19 +278,30 @@ private fun TeamScoreRow(
                 val isFirstPlayer = index == 0
                 val fontWeight = if (isWinner) FontWeight.Bold else FontWeight.Normal
                 val color = if (isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                val playerId = player.id
+                val playerClickModifier = if (playerId != null) {
+                    Modifier.clickable { onPlayerClick(playerId) }
+                } else {
+                    Modifier
+                }
 
-                PlayerAvatar(
-                    photoUrl = player.playerPhotoUrl,
-                    contentDescription = stringResource(MatchUiRes.string.match_player_avatar_cd, player),
-                )
-                Text(
-                    text = player.name.orEmpty(),
-                    modifier = Modifier.weight(1f),
-                    fontWeight = fontWeight,
-                    color = color,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(
+                    modifier = playerClickModifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(dimens.spacingSmall),
+                ) {
+                    PlayerAvatar(
+                        photoUrl = player.playerPhotoUrl,
+                        contentDescription = stringResource(MatchUiRes.string.match_player_avatar_cd, player),
+                    )
+                    Text(
+                        text = player.name.orEmpty(),
+                        fontWeight = fontWeight,
+                        color = color,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 if (isFirstPlayer) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

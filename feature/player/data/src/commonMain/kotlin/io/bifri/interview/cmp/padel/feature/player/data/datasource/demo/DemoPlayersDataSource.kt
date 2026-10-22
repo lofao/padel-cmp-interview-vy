@@ -1,5 +1,6 @@
 package io.bifri.interview.cmp.padel.feature.player.data.datasource.demo
 
+import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayerDetailDto
 import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayersResponseDto
 import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayersResponseDto.PlayerDto
 
@@ -13,6 +14,10 @@ internal class DemoPlayersDataSource {
                 country = "ES",
                 gender = "male",
                 photoUrl = null,
+                position = "Drive",
+                matchesPlayed = 98,
+                matchesWon = 88,
+                points = 14200,
             ),
             PlayerDto(
                 id = 2L,
@@ -21,6 +26,10 @@ internal class DemoPlayersDataSource {
                 country = "AR",
                 gender = "male",
                 photoUrl = null,
+                position = "Reverse",
+                matchesPlayed = 95,
+                matchesWon = 85,
+                points = 13800,
             ),
             PlayerDto(
                 id = 3L,
@@ -29,6 +38,10 @@ internal class DemoPlayersDataSource {
                 country = "ES",
                 gender = "male",
                 photoUrl = null,
+                position = "Reverse",
+                matchesPlayed = 90,
+                matchesWon = 78,
+                points = 12400,
             ),
             PlayerDto(
                 id = 4L,
@@ -37,6 +50,10 @@ internal class DemoPlayersDataSource {
                 country = "AR",
                 gender = "male",
                 photoUrl = null,
+                position = "Drive",
+                matchesPlayed = 92,
+                matchesWon = 76,
+                points = 12100,
             ),
             PlayerDto(
                 id = 5L,
@@ -45,6 +62,10 @@ internal class DemoPlayersDataSource {
                 country = "ES",
                 gender = "female",
                 photoUrl = null,
+                position = "Reverse",
+                matchesPlayed = 88,
+                matchesWon = 78,
+                points = 13100,
             ),
             PlayerDto(
                 id = 6L,
@@ -53,6 +74,10 @@ internal class DemoPlayersDataSource {
                 country = "AR",
                 gender = "female",
                 photoUrl = null,
+                position = "Drive",
+                matchesPlayed = 86,
+                matchesWon = 74,
+                points = 12500,
             ),
             PlayerDto(
                 id = 7L,
@@ -61,6 +86,10 @@ internal class DemoPlayersDataSource {
                 country = "ES",
                 gender = "female",
                 photoUrl = null,
+                position = "Drive",
+                matchesPlayed = 82,
+                matchesWon = 68,
+                points = 11200,
             ),
             PlayerDto(
                 id = 8L,
@@ -69,6 +98,10 @@ internal class DemoPlayersDataSource {
                 country = "ES",
                 gender = "female",
                 photoUrl = null,
+                position = "Reverse",
+                matchesPlayed = 80,
+                matchesWon = 65,
+                points = 10800,
             ),
             PlayerDto(
                 id = 9L,
@@ -77,6 +110,10 @@ internal class DemoPlayersDataSource {
                 country = "AR",
                 gender = "male",
                 photoUrl = null,
+                position = "Drive",
+                matchesPlayed = 84,
+                matchesWon = 68,
+                points = 10500,
             ),
             PlayerDto(
                 id = 10L,
@@ -85,6 +122,10 @@ internal class DemoPlayersDataSource {
                 country = "AR",
                 gender = "male",
                 photoUrl = null,
+                position = "Reverse",
+                matchesPlayed = 83,
+                matchesWon = 66,
+                points = 10200,
             ),
             PlayerDto(
                 id = 11L,
@@ -93,6 +134,10 @@ internal class DemoPlayersDataSource {
                 country = "ES",
                 gender = "male",
                 photoUrl = null,
+                position = "Drive",
+                matchesPlayed = 81,
+                matchesWon = 63,
+                points = 9800,
             ),
             PlayerDto(
                 id = 12L,
@@ -101,9 +146,32 @@ internal class DemoPlayersDataSource {
                 country = "ES",
                 gender = "male",
                 photoUrl = null,
+                position = "Reverse",
+                matchesPlayed = 79,
+                matchesWon = 60,
+                points = 9400,
             ),
         ),
     )
 
     fun getPlayers(): PlayersResponseDto = players
+
+    fun getPlayer(id: Long): PlayerDetailDto? {
+        val player = players.data?.firstOrNull { it?.id == id } ?: return null
+        return PlayerDetailDto(
+            id = player.id,
+            name = player.name,
+            photoUrl = player.photoUrl,
+            category = if (player.gender == "male") "men" else "women",
+            nationality = player.country,
+            ranking = player.ranking?.toString(),
+            points = player.points,
+            elo = 2100,
+            height = 185,
+            side = player.position?.lowercase(),
+            hand = "right",
+            birthplace = "Madrid, Spain",
+            age = "24",
+        )
+    }
 }

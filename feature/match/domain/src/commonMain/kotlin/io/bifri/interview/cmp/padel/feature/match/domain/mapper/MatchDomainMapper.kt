@@ -35,6 +35,7 @@ class MatchDomainMapper {
         ?.mapNotNull { (index, playerDto) ->
             playerDto?.let {
                 Player(
+                    id = playerDto.id,
                     name = playerDto.name,
                     playerPhotoUrl = playerPhotoUrls.getOrNull(index),
                 )

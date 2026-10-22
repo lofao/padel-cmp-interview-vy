@@ -7,4 +7,20 @@
     <string name="players_country">Country: %1$s</string>
     <string name="players_gender">Gender: %1$s</string>
     <string name="players_avatar_cd">%1$s avatar</string>
+    <string name="player_detail_title">Player Details</string>
+    <string name="player_not_found">Player not found</string>
+    <string name="player_detail_rank">Rank #%1$d</string>
+    <string name="player_detail_country">Country</string>
+    <string name="player_detail_gender">Gender</string>
+    <string name="player_detail_position">Position</string>
+    <string name="player_detail_hand">Hand</string>
+    <string name="player_detail_age">Age</string>
+    <string name="player_detail_height">Height</string>
+    <string name="player_detail_birthplace">Birthplace</string>
+    <string name="player_detail_points">Points</string>
+    <string name="player_detail_elo">ELO Rating</string>
+    <string name="player_detail_matches_played">Matches Played</string>
+    <string name="player_detail_matches_won">Matches Won</string>
+    <string name="player_detail_win_rate">Win Rate</string>
+    <string name="player_detail_stats_title">Statistics</string>
 </resources>

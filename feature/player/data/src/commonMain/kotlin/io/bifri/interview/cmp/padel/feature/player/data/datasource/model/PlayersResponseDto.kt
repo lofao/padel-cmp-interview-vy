@@ -15,5 +15,9 @@ data class PlayersResponseDto(
         @SerialName("country") val country: String? = null,
         @SerialName("gender") val gender: String? = null,
         @SerialName("photo_url") val photoUrl: String? = null,
+        @SerialName("position") val position: String? = null,
+        @SerialName("matches_played") val matchesPlayed: Int? = null,
+        @SerialName("matches_won") val matchesWon: Int? = null,
+        @SerialName("points") val points: Int? = null,
     )
 }

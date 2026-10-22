@@ -15,20 +15,24 @@ internal class DemoMatchDataSource {
             players = PlayersDto(
                 teamOne = listOf(
                     PlayerDto(
+                        id = 2L,
                         name = "Agustin Tapia",
                         connections = PlayerConnectionsDto(pair = "/api/pairs/66-65"),
                     ),
                     PlayerDto(
+                        id = 1L,
                         name = "Arturo Coello",
                         connections = PlayerConnectionsDto(pair = "/api/pairs/66-65"),
                     ),
                 ),
                 teamTwo = listOf(
                     PlayerDto(
+                        id = 4L,
                         name = "Federico Chingotto",
                         connections = PlayerConnectionsDto(pair = "/api/pairs/114-115"),
                     ),
                     PlayerDto(
+                        id = 3L,
                         name = "Alejandro Galan",
                         connections = PlayerConnectionsDto(pair = "/api/pairs/114-115"),
                     ),

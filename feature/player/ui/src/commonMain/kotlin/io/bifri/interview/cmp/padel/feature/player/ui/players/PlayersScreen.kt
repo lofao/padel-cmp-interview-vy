@@ -77,6 +77,7 @@ fun PlayersRoute(
     tournamentName: String,
     onBackClick: () -> Unit,
     onError: (Throwable) -> Unit,
+    onPlayerClick: (Long) -> Unit = {},
     viewModel: PlayersViewModel = koinViewModel(key = tournamentId.toString()) {
         parametersOf(tournamentName)
     },
@@ -89,6 +90,7 @@ fun PlayersRoute(
         onSearchQueryChange = viewModel::onSearchQueryChange,
         onClearSearchQuery = viewModel::onClearSearchQuery,
         onBackClick = onBackClick,
+        onPlayerClick = onPlayerClick,
     )
 
     LifecycleCollectEffect(
@@ -109,6 +111,7 @@ private fun PlayersScreen(
     onClearSearchQuery: () -> Unit,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
+    onPlayerClick: (Long) -> Unit = {},
 ) {
     if (uiState == null) return
 
@@ -189,6 +192,7 @@ private fun PlayersScreen(
                             .fillMaxWidth(),
                         items = uiState.filteredItems,
                         contentPadding = listContentPadding,
+                        onPlayerClick = onPlayerClick,
                     )
                 }
             }
@@ -271,6 +275,7 @@ private fun EmptyPlayersContent(
 private fun PlayersContent(
     items: List<Player>,
     contentPadding: PaddingValues,
+    onPlayerClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -282,7 +287,10 @@ private fun PlayersContent(
             items = items,
             key = Player::id,
         ) { player ->
-            PlayerListItem(player = player)
+            PlayerListItem(
+                player = player,
+                onClick = { onPlayerClick(player.id) },
+            )
         }
     }
 }
@@ -290,10 +298,12 @@ private fun PlayersContent(
 @Composable
 private fun PlayerListItem(
     player: Player,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
+        onClick = onClick,
     ) {
         Row(
             modifier = Modifier

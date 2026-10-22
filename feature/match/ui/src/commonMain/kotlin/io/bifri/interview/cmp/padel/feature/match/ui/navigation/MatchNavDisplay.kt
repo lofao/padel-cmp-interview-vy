@@ -31,6 +31,7 @@ fun MatchNavDisplay(
     tournamentName: String,
     onBackClick: () -> Unit,
     onError: (Throwable) -> Unit,
+    onPlayerClick: (Long) -> Unit = {},
 ) {
     val backStack = rememberNavBackStack(
         MatchNavConfiguration,
@@ -67,6 +68,7 @@ fun MatchNavDisplay(
                     tournamentName = route.tournamentName,
                     totalCourts = route.totalCourts,
                     onBackClick = { backStack.pop() },
+                    onPlayerClick = onPlayerClick,
                     onError = onError,
                 )
             }
