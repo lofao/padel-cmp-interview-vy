@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +50,8 @@ import io.bifri.interview.cmp.padel.feature.match.domain.model.Match.Team
 import io.bifri.interview.cmp.padel.feature.match.domain.model.Match.TeamIndex.TeamOne
 import io.bifri.interview.cmp.padel.feature.match.domain.model.Match.TeamIndex.TeamTwo
 import io.bifri.interview.cmp.padel.feature.match.ui.MatchUiRes
+import io.bifri.interview.cmp.padel.feature.match.ui.component.SetColumnWidth
+import io.bifri.interview.cmp.padel.feature.match.ui.component.SetScoreCell
 import io.bifri.interview.cmp.padel.feature.match.ui.match.MatchNavigationAction.ShowError
 import io.bifri.interview.cmp.padel.feature.match.ui.match.MatchState.UiState
 import io.bifri.interview.cmp.padel.feature.match.ui.match_court
@@ -61,7 +63,6 @@ import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 private val PlayerAvatarSize = 48.dp
-private val ScoreColumnMinWidth = 32.dp
 
 @Composable
 fun MatchRoute(
@@ -208,14 +209,22 @@ private fun ScoreboardCard(match: Match) {
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                match.scores.forEach {
-                    Text(
-                        modifier = Modifier.widthIn(min = ScoreColumnMinWidth),
-                        text = it.setNumber.toString(),
-                        textAlign = TextAlign.End,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    match.scores.forEach { setScore ->
+                        Box(
+                            modifier = Modifier.width(SetColumnWidth),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = setScore.setNumber.toString(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
                 }
             }
             TeamScoreRow(
@@ -264,17 +273,23 @@ private fun TeamScoreRow(
                     modifier = Modifier.weight(1f),
                     fontWeight = fontWeight,
                     color = color,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (isFirstPlayer) {
-                    setGames.forEach { games ->
-                        Text(
-                            modifier = Modifier.widthIn(min = ScoreColumnMinWidth),
-                            text = games.toString(),
-                            textAlign = TextAlign.End,
-                            fontWeight = fontWeight,
-                            color = color,
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        setGames.forEach { games ->
+                            SetScoreCell(
+                                score = games,
+                                fontWeight = fontWeight,
+                                color = color,
+                            )
+                        }
                     }
+                } else {
+                    Spacer(modifier = Modifier.width(SetColumnWidth * setGames.size))
                 }
             }
         }
@@ -374,8 +389,13 @@ private fun previewMatch() = Match(
         ),
         SetScore(
             setNumber = 2,
-            teamOneGames = "6",
-            teamTwoGames = "2",
+            teamOneGames = "6(5)",
+            teamTwoGames = "7",
+        ),
+        SetScore(
+            setNumber = 3,
+            teamOneGames = "7",
+            teamTwoGames = "6(4)",
         ),
     ),
     winnerTeam = TeamOne,

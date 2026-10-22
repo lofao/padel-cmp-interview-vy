@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +46,7 @@ import io.bifri.interview.cmp.padel.feature.match.domain.model.TournamentMatch.T
 import io.bifri.interview.cmp.padel.feature.match.domain.model.TournamentMatch.TeamIndex.TeamOne
 import io.bifri.interview.cmp.padel.feature.match.domain.model.TournamentMatch.TeamIndex.TeamTwo
 import io.bifri.interview.cmp.padel.feature.match.ui.MatchUiRes
+import io.bifri.interview.cmp.padel.feature.match.ui.component.SetScoreCell
 import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesNavigationAction.OpenMatch
 import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesNavigationAction.ShowError
 import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesState.UiState
@@ -256,39 +258,60 @@ private fun MatchListItem(
             )
             TeamSummaryRow(
                 teamName = match.teamOne?.name.orEmpty(),
-                games = match.scores.joinToString(" ") { it.teamOneGames.toString() },
+                scores = match.scores.map { it.teamOneGames },
                 isWinner = match.winnerTeam == TeamOne,
+                hasScores = match.scores.isNotEmpty(),
             )
             TeamSummaryRow(
                 teamName = match.teamTwo?.name.orEmpty(),
-                games = match.scores.joinToString(" ") { it.teamTwoGames.toString() },
+                scores = match.scores.map { it.teamTwoGames },
                 isWinner = match.winnerTeam == TeamTwo,
+                hasScores = match.scores.isNotEmpty(),
             )
         }
     }
 }
 
+private const val DefaultMaxSets = 3
+
 @Composable
-private fun TeamSummaryRow(teamName: String, games: String, isWinner: Boolean) {
+private fun TeamSummaryRow(
+    teamName: String,
+    scores: List<String?>,
+    isWinner: Boolean,
+    hasScores: Boolean,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(dimens.spacingMedium),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(dimens.spacingSmall),
     ) {
         val fontWeight = if (isWinner) FontWeight.Bold else FontWeight.Normal
         val color = if (isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-
+        // ellipse text at the end
         Text(
             modifier = Modifier.weight(1f),
             text = teamName,
             fontWeight = fontWeight,
             color = color,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            text = games,
-            fontWeight = fontWeight,
-            color = color,
-        )
+        if (hasScores) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                val setSlots = maxOf(DefaultMaxSets, scores.size)
+                for (index in 0 until setSlots) {
+                    val score = scores.getOrNull(index)
+                    SetScoreCell(
+                        score = score,
+                        fontWeight = fontWeight,
+                        color = color,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -325,11 +348,20 @@ private fun MatchesScreenPreview() {
                         id = 1L,
                         teamOneName = "Coello / Tapia",
                         teamTwoName = "Galan / Chingotto",
+                        scores = listOf(
+                            SetScore(setNumber = 1, teamOneGames = "6", teamTwoGames = "2"),
+                            SetScore(setNumber = 2, teamOneGames = "6(5)", teamTwoGames = "7"),
+                            SetScore(setNumber = 3, teamOneGames = "7", teamTwoGames = "6(4)"),
+                        ),
                     ),
                     previewMatch(
                         id = 2L,
                         teamOneName = "Lebron / Di Nenno",
                         teamTwoName = "Stupaczuk / Yanguas",
+                        scores = listOf(
+                            SetScore(setNumber = 1, teamOneGames = "6", teamTwoGames = "4"),
+                            SetScore(setNumber = 2, teamOneGames = "3", teamTwoGames = "2"),
+                        ),
                     ),
                 ),
                 isDataLoading = false,
@@ -374,6 +406,10 @@ private fun previewMatch(
     id: Long,
     teamOneName: String,
     teamTwoName: String,
+    scores: List<SetScore> = listOf(
+        SetScore(setNumber = 1, teamOneGames = "6", teamTwoGames = "4"),
+        SetScore(setNumber = 2, teamOneGames = "3", teamTwoGames = "2"),
+    ),
 ) = TournamentMatch(
     id = id,
     courtName = "Center Court",
@@ -382,18 +418,7 @@ private fun previewMatch(
     roundName = "Semifinals",
     teamOne = Team(name = teamOneName),
     teamTwo = Team(name = teamTwoName),
-    scores = listOf(
-        SetScore(
-            setNumber = 1,
-            teamOneGames = "6",
-            teamTwoGames = "4",
-        ),
-        SetScore(
-            setNumber = 2,
-            teamOneGames = "3",
-            teamTwoGames = "2",
-        ),
-    ),
+    scores = scores,
     winnerTeam = TeamOne,
     playedAt = LocalDate.parse("2026-09-08"),
     scheduledAt = LocalDate.parse("2026-09-08"),
