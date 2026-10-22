@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImage
 import io.bifri.interview.cmp.padel.core.designsystem.component.appbar.CollapsingTopAppBar
+import io.bifri.interview.cmp.padel.core.designsystem.component.avatar.PlayerAvatar
 import io.bifri.interview.cmp.padel.core.designsystem.component.button.BackIconButton
 import io.bifri.interview.cmp.padel.core.designsystem.component.placeholder.ShimmerBox
 import io.bifri.interview.cmp.padel.core.designsystem.component.pulltorefresh.AppPullToRefreshBox
@@ -236,21 +237,10 @@ private fun PlayerHeader(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall),
     ) {
-        SubcomposeAsyncImage(
-            model = player.photoUrl,
+        PlayerAvatar(
+            photoUrl = player.photoUrl,
             contentDescription = stringResource(PlayerUiRes.string.players_avatar_cd, player.name),
-            modifier = Modifier
-                .size(PlayerHeaderAvatarSize)
-                .clip(CircleShape),
-            contentScale = ContentScale.Crop,
-            loading = { ShimmerBox(Modifier.matchParentSize()) },
-            error = {
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                )
-            },
+            modifier = Modifier.size(PlayerHeaderAvatarSize),
         )
         Text(
             text = player.name,

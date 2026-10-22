@@ -31,7 +31,7 @@ actual class LocationService {
             }
 
             override fun locationManager(manager: CLLocationManager, didFailWithError: NSError) {
-                trySend(DefaultLocation)
+                trySend(null)
             }
         }
 
@@ -46,7 +46,7 @@ actual class LocationService {
             }
             trySend(coords)
         } else {
-            trySend(DefaultLocation)
+            trySend(null)
         }
 
         awaitClose {
@@ -57,6 +57,5 @@ actual class LocationService {
 
     companion object {
         private const val DistanceFilterM = 10.0
-        private val DefaultLocation = Coordinates(40.4168, -3.7038)
     }
 }

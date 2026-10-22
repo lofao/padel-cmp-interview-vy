@@ -66,7 +66,7 @@ fun TournamentRoute(
     onMatchesClick: (tournamentName: String) -> Unit,
     onPlayersClick: (tournamentName: String) -> Unit,
     onError: (Throwable) -> Unit,
-    viewModel: TournamentViewModel = koinViewModel(key = tournamentId.toString()) { parametersOf(tournamentId) },
+    viewModel: TournamentViewModel = koinViewModel { parametersOf(tournamentId) },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(null)
 

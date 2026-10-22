@@ -18,7 +18,7 @@ actual class LocationService(
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
 
         if (locationManager == null) {
-            trySend(DefaultLocation)
+            trySend(null)
             close()
             return@callbackFlow
         }
@@ -87,13 +87,13 @@ actual class LocationService(
                     listener,
                 )
             } else if (!lastLocationSent) {
-                trySend(DefaultLocation)
+                trySend(null)
             }
         } catch (_: SecurityException) {
-            trySend(DefaultLocation)
+            trySend(null)
         } catch (_: Exception) {
             if (!lastLocationSent) {
-                trySend(DefaultLocation)
+                trySend(null)
             }
         }
     }
@@ -101,6 +101,5 @@ actual class LocationService(
     companion object {
         private const val MinTimeMs = 60000L
         private const val MinDistanceM = 10f
-        private val DefaultLocation = Coordinates(40.4168, -3.7038)
     }
 }

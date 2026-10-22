@@ -11,9 +11,9 @@ import io.bifri.interview.cmp.padel.core.ui.input.InputThrottle.DefaultSkipDurat
 import io.bifri.interview.cmp.padel.feature.match.domain.usecase.GetTournamentMatchesUseCase
 import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesNavigationAction.OpenMatch
 import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesNavigationAction.ShowError
-import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesPartialState.Loading
-import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesPartialState.LoadingFailed
-import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesPartialState.MatchesLoaded
+import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesPartialState.DataLoaded
+import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesPartialState.DataLoading
+import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesPartialState.DataLoadingError
 import io.bifri.interview.cmp.padel.feature.match.ui.matches.MatchesPartialState.Navigate
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -35,15 +35,23 @@ class MatchesViewModel(
     private val getTournamentMatchesUseCase: GetTournamentMatchesUseCase,
 ) : BaseViewModel(coroutineDispatcher, exceptionHandler) {
 
-    private val refreshClicks = mutableSharedFlowOfInput<Unit>()
+    private val refreshes = mutableSharedFlowOfInput<Unit>()
     private val matchClicks = mutableSharedFlowOfInput<Pair<Long, Int?>>()
     private val state: Flow<MatchesState> = _state
     internal val uiState = state.map { it.uiState }
     internal val events = state.mapNotNull { it.event }
 
+    internal fun onRefresh() {
+        refreshes.tryEmit(Unit)
+    }
+
+    internal fun onMatchClick(matchId: Long, totalCourts: Int?) {
+        matchClicks.tryEmit(matchId to totalCourts)
+    }
+
     private val _state: Flow<MatchesState>
         get() = merge(
-            refreshClicksStream(),
+            dataStream(),
             matchClicksStream(),
         )
             .catch {
@@ -57,23 +65,39 @@ class MatchesViewModel(
                 initialValue = MatchesState(),
             )
 
-    internal fun onRefresh() {
-        refreshClicks.tryEmit(Unit)
+    private fun viewStateReducer(
+        prevState: MatchesState,
+        changes: MatchesPartialState,
+    ): MatchesState = when (changes) {
+        DataLoading -> prevState.copy(uiState = prevState.uiState.copy(isDataLoading = true))
+
+        is DataLoadingError -> prevState.copy(
+            uiState = prevState.uiState.copy(isDataLoading = false),
+            event = Event(ShowError(changes.error)),
+        )
+
+        is DataLoaded -> prevState.copy(
+            uiState = prevState.uiState.copy(
+                items = changes.matches,
+                isDataLoading = false,
+                tournamentName = tournamentName,
+            ),
+        )
+
+        is Navigate -> prevState.copy(event = Event(changes.navigationAction))
     }
 
-    internal fun onMatchClick(matchId: Long, totalCourts: Int?) {
-        matchClicks.tryEmit(matchId to totalCourts)
-    }
-
-    private fun matchesStream(): Flow<MatchesPartialState> = flow {
-        emit(Loading)
-        emit(MatchesLoaded(getTournamentMatchesUseCase(tournamentId)))
-    }
-        .catch { emit(LoadingFailed(it)) }
-
-    private fun refreshClicksStream(): Flow<MatchesPartialState> = refreshClicks
+    private fun dataStream(): Flow<MatchesPartialState> = refreshes
         .onStart { emit(Unit) }
-        .flatMapLatest { matchesStream() }
+        .flatMapLatest {
+            flow { emit(getTournamentMatchesUseCase(tournamentId)) }
+                .map(::DataLoaded)
+                .onStart<MatchesPartialState> { emit(DataLoading) }
+                .catch {
+                    exceptionHandler.handleException(it)
+                    emit(DataLoadingError(it))
+                }
+        }
 
     private fun matchClicksStream(): Flow<MatchesPartialState> = matchClicks
         .throttleTime(DefaultSkipDuration)
@@ -85,30 +109,4 @@ class MatchesViewModel(
                 ),
             )
         }
-
-    private fun viewStateReducer(
-        prevState: MatchesState,
-        changes: MatchesPartialState,
-    ): MatchesState = when (changes) {
-        Loading -> prevState.copy(
-            uiState = prevState.uiState.copy(isDataLoading = true),
-            event = null,
-        )
-
-        is MatchesLoaded -> prevState.copy(
-            uiState = prevState.uiState.copy(
-                items = changes.matches,
-                isDataLoading = false,
-                tournamentName = tournamentName,
-            ),
-            event = null,
-        )
-
-        is LoadingFailed -> prevState.copy(
-            uiState = prevState.uiState.copy(isDataLoading = false),
-            event = Event(ShowError(changes.error)),
-        )
-
-        is Navigate -> prevState.copy(event = Event(changes.navigationAction))
-    }
 }

@@ -11,6 +11,7 @@ kotlin {
             api(projects.core.designsystem)
             api(libs.androidx.lifecycle.runtime.compose)
             api(libs.androidx.lifecycle.viewmodel.compose)
+            api(libs.androidx.lifecycle.viewmodel.navigation3)
             api(libs.coil.compose)
             api(libs.coil.network.ktor)
             api(libs.koin.compose)

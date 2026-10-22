@@ -19,6 +19,7 @@ import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentP
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -38,7 +39,7 @@ class TournamentViewModel(
     private val matchesClicks = mutableSharedFlowOfInput<String>()
     private val playersClicks = mutableSharedFlowOfInput<String>()
     private val state: Flow<TournamentState> = _state
-    internal val uiState = state.map { it.uiState }
+    internal val uiState = state.map { it.uiState }.distinctUntilChanged()
     internal val events = state.mapNotNull { it.event }
 
     internal fun onRefresh() {
@@ -74,7 +75,10 @@ class TournamentViewModel(
         prevState: TournamentState,
         changes: TournamentPartialState,
     ): TournamentState = when (changes) {
-        DataLoading -> prevState.copy(uiState = prevState.uiState.copy(isDataLoading = true))
+        DataLoading -> prevState.copy(
+            uiState = prevState.uiState.copy(isDataLoading = true),
+            event = null,
+        )
 
         is DataLoadingError -> prevState.copy(
             uiState = prevState.uiState.copy(isDataLoading = false),
@@ -86,6 +90,7 @@ class TournamentViewModel(
                 tournament = changes.tournament,
                 isDataLoading = false,
             ),
+            event = null,
         )
 
         is Navigate -> prevState.copy(event = Event(changes.navigationAction))
@@ -94,13 +99,13 @@ class TournamentViewModel(
     private fun dataStream() = refreshes
         .onStart { emit(Unit) }
         .flatMapLatest {
-            flow { emit(getTournamentUseCase(tournamentId)) }
-                .map(::DataLoaded)
-                .onStart<TournamentPartialState> { emit(DataLoading) }
-                .catch {
-                    exceptionHandler.handleException(it)
-                    emit(DataLoadingError(it))
-                }
+            flow {
+                emit(DataLoading)
+                emit(DataLoaded(getTournamentUseCase(tournamentId)))
+            }.catch {
+                exceptionHandler.handleException(it)
+                emit(DataLoadingError(it))
+            }
         }
 
     private fun matchesClicksStream(): Flow<TournamentPartialState> = matchesClicks

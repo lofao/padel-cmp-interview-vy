@@ -2,7 +2,6 @@
 
 package io.bifri.interview.cmp.padel.feature.player.ui.players
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -43,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.SubcomposeAsyncImage
 import io.bifri.interview.cmp.padel.core.designsystem.component.appbar.CollapsingTopAppBar
+import io.bifri.interview.cmp.padel.core.designsystem.component.avatar.PlayerAvatar
 import io.bifri.interview.cmp.padel.core.designsystem.component.button.BackIconButton
 import io.bifri.interview.cmp.padel.core.designsystem.component.placeholder.ShimmerBox
 import io.bifri.interview.cmp.padel.core.designsystem.component.pulltorefresh.AppPullToRefreshBox
@@ -315,6 +314,7 @@ private fun PlayerListItem(
             PlayerAvatar(
                 photoUrl = player.photoUrl,
                 contentDescription = stringResource(PlayerUiRes.string.players_avatar_cd, player.name),
+                modifier = Modifier.size(PlayerAvatarSize),
             )
             Column(
                 modifier = Modifier.weight(1f),
@@ -355,24 +355,6 @@ private fun PlayerListItem(
             }
         }
     }
-}
-
-@Composable
-private fun PlayerAvatar(photoUrl: String?, contentDescription: String) {
-    SubcomposeAsyncImage(
-        model = photoUrl,
-        contentDescription = contentDescription,
-        modifier = Modifier.size(PlayerAvatarSize).clip(CircleShape),
-        contentScale = ContentScale.Fit,
-        loading = { ShimmerBox(Modifier.matchParentSize()) },
-        error = {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            )
-        },
-    )
 }
 
 private fun processEvents(
