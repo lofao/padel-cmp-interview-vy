@@ -11,4 +11,6 @@
     <string name="tournament_screen_title">Tournament</string>
     <string name="tournaments_empty">No tournaments</string>
     <string name="tournaments_screen_title">Tournaments</string>
+    <string name="tournament_distance_km">%1$d km away</string>
+    <string name="tournament_distance_m">%1$d m away</string>
 </resources>

@@ -28,6 +28,7 @@ import io.bifri.interview.cmp.padel.core.designsystem.theme.AppTheme
 import io.bifri.interview.cmp.padel.core.designsystem.theme.dimens
 import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.LifecycleCollectEffect
+import io.bifri.interview.cmp.padel.core.ui.location.LocationPermissionEffect
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.ui.TournamentUiRes
 import io.bifri.interview.cmp.padel.feature.tournament.ui.component.TournamentSummary
@@ -47,6 +48,8 @@ fun TournamentsRoute(
     viewModel: TournamentsViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(null)
+
+    LocationPermissionEffect()
 
     TournamentsScreen(
         uiState = uiState,

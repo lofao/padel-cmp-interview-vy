@@ -6,6 +6,7 @@ import io.bifri.interview.cmp.padel.core.exception.di.ExceptionModule
 import io.bifri.interview.cmp.padel.core.extensions.di.ExtensionsModule
 import io.bifri.interview.cmp.padel.core.logging.di.LoggerModule
 import io.bifri.interview.cmp.padel.core.network.NetworkModule
+import io.bifri.interview.cmp.padel.core.ui.di.LocationModule
 import io.bifri.interview.cmp.padel.feature.match.data.di.MatchDataModule
 import io.bifri.interview.cmp.padel.feature.match.domain.di.MatchDomainModule
 import io.bifri.interview.cmp.padel.feature.match.ui.di.MatchUiModule
@@ -22,6 +23,7 @@ val AppModules: List<Module> = listOf(
     CoroutinesModule,
     ExceptionModule,
     ExtensionsModule,
+    LocationModule,
     LoggerModule,
     NetworkModule,
     MatchDataModule,

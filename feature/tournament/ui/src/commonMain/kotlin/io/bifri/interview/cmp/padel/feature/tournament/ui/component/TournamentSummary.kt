@@ -30,7 +30,7 @@ internal fun TournamentSummary(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
         )
-        Text(text = tournament.formatLocation())
+        Text(text = tournament.formatLocationAndDistance())
         Text(
             text = tournament.formatDateRange(),
             style = MaterialTheme.typography.bodyMedium,
@@ -42,7 +42,17 @@ private fun TournamentsTournament.formatLevelAndStatus() = listOfNotNull(level, 
     .filter { it.isNotBlank() }
     .joinToString(" • ") { it.replace('_', ' ').uppercase() }
 
-private fun TournamentsTournament.formatLocation() =
-    listOfNotNull(location, country).filter { it.isNotBlank() }.joinToString(", ")
+private fun TournamentsTournament.formatLocationAndDistance(): String {
+    val locationPart = listOfNotNull(location, country).filter { it.isNotBlank() }.joinToString(", ")
+    val distancePart = distanceKm?.let { formatDistance(it) }
+    return listOfNotNull(locationPart.ifBlank { null }, distancePart).joinToString(" • ")
+}
+
+@Suppress("MagicNumber")
+private fun formatDistance(distanceKm: Double): String = if (distanceKm < 1.0) {
+    "${(distanceKm * 1000).toInt()} m away"
+} else {
+    "${distanceKm.toInt()} km away"
+}
 
 private fun TournamentsTournament.formatDateRange() = listOfNotNull(startDate, endDate).joinToString(" – ")
