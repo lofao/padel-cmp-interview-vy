@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package io.bifri.interview.cmp.padel.core.location
 
 internal val FallbackCoordinates: Map<String, Coordinates> = mapOf(

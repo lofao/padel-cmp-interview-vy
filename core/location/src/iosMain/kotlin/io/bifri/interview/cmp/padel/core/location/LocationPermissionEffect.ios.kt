@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import platform.CoreLocation.CLLocationManager
 
 @Composable
+@Suppress("ModifierMissing")
 actual fun LocationPermissionEffect() {
     LaunchedEffect(Unit) {
         val locationManager = CLLocationManager()

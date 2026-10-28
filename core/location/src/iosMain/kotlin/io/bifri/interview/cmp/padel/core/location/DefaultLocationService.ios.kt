@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package io.bifri.interview.cmp.padel.core.location
 
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -30,6 +32,7 @@ class DefaultLocationService : LocationService {
                 }
             }
 
+            @Suppress("UnusedParameter")
             override fun locationManager(manager: CLLocationManager, didFailWithError: NSError) {
                 trySend(null)
             }

@@ -8,28 +8,25 @@ import platform.CoreLocation.CLPlacemark
 import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
-class DefaultGeocoderService : GeocoderService {
-    private val geocoder = CLGeocoder()
-
-    override suspend fun geocode(location: String?, country: String?): Coordinates? {
-        val query = listOfNotNull(location, country).filter { it.isNotBlank() }.joinToString(", ")
-        if (query.isBlank()) return null
-
-        val queryKey = query.lowercase()
-        val locationKey = location?.lowercase().orEmpty()
-        val fallback = FallbackCoordinates[queryKey] ?: FallbackCoordinates[locationKey]
-
-        if (fallback != null) return fallback
-
+class DefaultGeocoderService : BaseGeocoderService() {
+    override suspend fun geocodePlatform(query: String): Coordinates? {
+        val geocoder = CLGeocoder()
         return suspendCancellableCoroutine { continuation ->
+            continuation.invokeOnCancellation { geocoder.cancelGeocode() }
+
             geocoder.geocodeAddressString(query) { placemarks, _ ->
-                val placemark = placemarks?.firstOrNull() as? CLPlacemark
-                val clLocation = placemark?.location
-                val coords = clLocation?.coordinate?.useContents {
-                    Coordinates(latitude = latitude, longitude = longitude)
+                if (continuation.isActive) {
+                    val placemark = placemarks?.firstOrNull() as? CLPlacemark
+                    continuation.resume(placemark?.toCoordinates())
                 }
-                continuation.resume(coords ?: fallback)
             }
+        }
+    }
+
+    private fun CLPlacemark.toCoordinates(): Coordinates? {
+        val clLocation = location ?: return null
+        return clLocation.coordinate.useContents {
+            Coordinates(latitude = latitude, longitude = longitude)
         }
     }
 }

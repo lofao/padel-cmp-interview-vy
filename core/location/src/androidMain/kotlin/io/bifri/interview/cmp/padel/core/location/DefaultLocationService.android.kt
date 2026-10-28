@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber", "TooGenericExceptionCaught", "SwallowedException")
+
 package io.bifri.interview.cmp.padel.core.location
 
 import android.annotation.SuppressLint
@@ -43,6 +45,7 @@ class DefaultLocationService(
         }
 
         @Deprecated("Deprecated in API 29")
+        @Suppress("EmptyFunctionBlock")
         override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {
             // Deprecated callback required for older API levels
         }
@@ -72,22 +75,28 @@ class DefaultLocationService(
         lastLocationSent: Boolean,
     ) {
         try {
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    MinTimeMs,
-                    MinDistanceM,
-                    listener,
-                )
-            } else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                locationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER,
-                    MinTimeMs,
-                    MinDistanceM,
-                    listener,
-                )
-            } else if (!lastLocationSent) {
-                trySend(null)
+            when {
+                locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> {
+                    locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER,
+                        MinTimeMs,
+                        MinDistanceM,
+                        listener,
+                    )
+                }
+
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> {
+                    locationManager.requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER,
+                        MinTimeMs,
+                        MinDistanceM,
+                        listener,
+                    )
+                }
+
+                !lastLocationSent -> {
+                    trySend(null)
+                }
             }
         } catch (_: SecurityException) {
             trySend(null)

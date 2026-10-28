@@ -10,12 +10,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 
 @Composable
+@Suppress("ModifierMissing")
 actual fun LocationPermissionEffect() {
     val context = LocalContext.current
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = {},
-    )
+    ) {}
 
     LaunchedEffect(Unit) {
         val hasFine = ContextCompat.checkSelfPermission(
