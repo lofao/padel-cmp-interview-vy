@@ -13,8 +13,8 @@ import platform.Foundation.NSError
 import platform.darwin.NSObject
 
 @OptIn(ExperimentalForeignApi::class)
-actual class LocationService {
-    actual fun observeLocation(): Flow<Coordinates?> = callbackFlow {
+class DefaultLocationService : LocationService {
+    override fun observeLocation(): Flow<Coordinates?> = callbackFlow {
         val locationManager = CLLocationManager()
         locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
         locationManager.distanceFilter = DistanceFilterM

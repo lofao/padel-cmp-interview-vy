@@ -7,7 +7,14 @@ import io.bifri.interview.cmp.padel.feature.tournament.domain.usecase.GetTournam
 import org.koin.dsl.module
 
 val TournamentDomainModule = module {
-    single { GetTournamentsUseCase(tournamentRepository = get(), mapper = get()) }
+    single {
+        GetTournamentsUseCase(
+            tournamentRepository = get(),
+            mapper = get(),
+            locationService = get(),
+            geocoderService = get(),
+        )
+    }
     single { GetTournamentUseCase(tournamentRepository = get(), mapper = get()) }
     single { TournamentsDomainMapper(exceptionHandler = get(), dateTimeUtils = get()) }
     single { TournamentDomainMapper(dateTimeUtils = get()) }

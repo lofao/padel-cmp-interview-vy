@@ -10,11 +10,11 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-actual class LocationService(
+class DefaultLocationService(
     private val context: Context,
-) {
+) : LocationService {
     @SuppressLint("MissingPermission")
-    actual fun observeLocation(): Flow<Coordinates?> = callbackFlow {
+    override fun observeLocation(): Flow<Coordinates?> = callbackFlow {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
 
         if (locationManager == null) {

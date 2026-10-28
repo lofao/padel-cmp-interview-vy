@@ -5,13 +5,9 @@ import com.hoc081098.flowext.throttleTime
 import io.bifri.interview.cmp.padel.core.coroutines.extension.mutableSharedFlowOfInput
 import io.bifri.interview.cmp.padel.core.coroutines.extension.stateInViewModel
 import io.bifri.interview.cmp.padel.core.exception.ExceptionHandler
-import io.bifri.interview.cmp.padel.core.location.Coordinates
-import io.bifri.interview.cmp.padel.core.location.GeocoderService
-import io.bifri.interview.cmp.padel.core.location.LocationService
 import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.base.BaseViewModel
 import io.bifri.interview.cmp.padel.core.ui.input.InputThrottle.DefaultSkipDuration
-import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.domain.usecase.GetTournamentsUseCase
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.OpenTournament
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.ShowError
@@ -22,10 +18,7 @@ import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.Tournament
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -37,8 +30,6 @@ class TournamentsViewModel(
     coroutineDispatcher: CoroutineDispatcher,
     exceptionHandler: ExceptionHandler,
     private val getTournamentsUseCase: GetTournamentsUseCase,
-    private val locationService: LocationService,
-    private val geocoderService: GeocoderService,
 ) : BaseViewModel(coroutineDispatcher, exceptionHandler) {
     private val refreshes = mutableSharedFlowOfInput<Unit>()
     private val tournamentClicks = mutableSharedFlowOfInput<Long>()
@@ -94,11 +85,7 @@ class TournamentsViewModel(
     private fun dataStream() = refreshes
         .onStart { emit(Unit) }
         .flatMapLatest {
-            combine(
-                flow { emit(getTournamentsUseCase()) },
-                locationService.observeLocation().distinctUntilChanged(),
-                ::processTournamentsWithLocation,
-            )
+            getTournamentsUseCase()
                 .map(::DataLoaded)
                 .onStart<TournamentsPartialState> { emit(DataLoading) }
                 .catch {
@@ -106,23 +93,6 @@ class TournamentsViewModel(
                     emit(DataLoadingError(it))
                 }
         }
-
-    private suspend fun processTournamentsWithLocation(
-        tournaments: List<TournamentsTournament>,
-        location: Coordinates?,
-    ): List<TournamentsTournament> {
-        if (location == null) return tournaments
-
-        val tournamentsWithDistance = tournaments.map { tournament ->
-            val coords = geocoderService.geocode(tournament.location, tournament.country)
-            val distance = coords?.let { location.distanceToKm(it) }
-            tournament.copy(distanceKm = distance)
-        }
-
-        return tournamentsWithDistance.sortedWith(
-            compareBy { it.distanceKm ?: Double.MAX_VALUE },
-        )
-    }
 
     private fun tournamentClicksStream(): Flow<TournamentsPartialState> = tournamentClicks
         .throttleTime(DefaultSkipDuration)

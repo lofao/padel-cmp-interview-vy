@@ -6,10 +6,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-actual class GeocoderService(
+class DefaultGeocoderService(
     private val context: Context,
-) {
-    actual suspend fun geocode(location: String?, country: String?): Coordinates? {
+) : GeocoderService {
+    override suspend fun geocode(location: String?, country: String?): Coordinates? {
         val query = listOfNotNull(location, country).filter { it.isNotBlank() }.joinToString(", ")
         if (query.isBlank()) return null
 

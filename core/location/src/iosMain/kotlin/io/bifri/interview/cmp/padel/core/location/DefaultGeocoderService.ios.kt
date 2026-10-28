@@ -8,10 +8,10 @@ import platform.CoreLocation.CLPlacemark
 import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
-actual class GeocoderService {
+class DefaultGeocoderService : GeocoderService {
     private val geocoder = CLGeocoder()
 
-    actual suspend fun geocode(location: String?, country: String?): Coordinates? {
+    override suspend fun geocode(location: String?, country: String?): Coordinates? {
         val query = listOfNotNull(location, country).filter { it.isNotBlank() }.joinToString(", ")
         if (query.isBlank()) return null
 
