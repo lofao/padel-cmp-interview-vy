@@ -5,23 +5,23 @@ import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.savedstate.serialization.SavedStateConfiguration
-import io.bifri.interview.cmp.padel.navigation.AppRoute.MatchGraph
-import io.bifri.interview.cmp.padel.navigation.AppRoute.PlayerGraph
-import io.bifri.interview.cmp.padel.navigation.AppRoute.TournamentGraph
+import io.bifri.interview.cmp.padel.feature.match.ui.navigation.matchRoutes
+import io.bifri.interview.cmp.padel.feature.player.ui.navigation.playerRoutes
+import io.bifri.interview.cmp.padel.feature.tournament.ui.navigation.TournamentRoute.Tournaments
+import io.bifri.interview.cmp.padel.feature.tournament.ui.navigation.tournamentRoutes
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import kotlinx.serialization.modules.subclass
 
 private val AppNavConfiguration = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(baseClass = NavKey::class) {
-            subclass(TournamentGraph::class)
-            subclass(MatchGraph::class)
-            subclass(PlayerGraph::class)
+            tournamentRoutes()
+            matchRoutes()
+            playerRoutes()
         }
     }
 }
 
 @Composable
 internal fun rememberAppNavBackStack(): NavBackStack<NavKey> =
-    rememberNavBackStack(AppNavConfiguration, TournamentGraph)
+    rememberNavBackStack(AppNavConfiguration, Tournaments)
