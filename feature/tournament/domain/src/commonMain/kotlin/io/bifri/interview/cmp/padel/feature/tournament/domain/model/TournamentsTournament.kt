@@ -11,5 +11,4 @@ data class TournamentsTournament(
     val status: String?,
     val startDate: LocalDate?,
     val endDate: LocalDate?,
-    val distanceKm: Double? = null,
 )

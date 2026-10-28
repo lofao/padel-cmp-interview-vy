@@ -8,12 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import io.bifri.interview.cmp.padel.core.designsystem.theme.dimens
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
+import io.bifri.interview.cmp.padel.feature.tournament.ui.model.TournamentUiModel
 
 @Composable
 internal fun TournamentSummary(
-    tournament: TournamentsTournament,
+    item: TournamentUiModel,
     modifier: Modifier = Modifier,
 ) {
+    val tournament = item.tournament
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(dimens.spacingSmall),
@@ -30,7 +32,7 @@ internal fun TournamentSummary(
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
         )
-        Text(text = tournament.formatLocationAndDistance())
+        Text(text = item.formatLocationAndDistance())
         Text(
             text = tournament.formatDateRange(),
             style = MaterialTheme.typography.bodyMedium,
@@ -42,8 +44,10 @@ private fun TournamentsTournament.formatLevelAndStatus() = listOfNotNull(level, 
     .filter { it.isNotBlank() }
     .joinToString(" • ") { it.replace('_', ' ').uppercase() }
 
-private fun TournamentsTournament.formatLocationAndDistance(): String {
-    val locationPart = listOfNotNull(location, country).filter { it.isNotBlank() }.joinToString(", ")
+private fun TournamentUiModel.formatLocationAndDistance(): String {
+    val locationPart = listOfNotNull(tournament.location, tournament.country).filter {
+        it.isNotBlank()
+    }.joinToString(", ")
     val distancePart = distanceKm?.let { formatDistance(it) }
     return listOfNotNull(locationPart.ifBlank { null }, distancePart).joinToString(" • ")
 }

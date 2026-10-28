@@ -62,8 +62,8 @@ class GetTournamentsUseCaseTest {
         val result = useCase().first()
 
         assertEquals(2, result.size)
-        assertEquals("Tournament Madrid", result[0].name)
-        assertEquals("Tournament Barcelona", result[1].name)
+        assertEquals("Tournament Madrid", result[0].tournament.name)
+        assertEquals("Tournament Barcelona", result[1].tournament.name)
     }
 
     private class FakeTournamentRepository(

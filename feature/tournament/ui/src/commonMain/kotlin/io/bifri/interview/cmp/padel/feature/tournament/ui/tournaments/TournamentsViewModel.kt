@@ -9,6 +9,7 @@ import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.base.BaseViewModel
 import io.bifri.interview.cmp.padel.core.ui.input.InputThrottle.DefaultSkipDuration
 import io.bifri.interview.cmp.padel.feature.tournament.domain.usecase.GetTournamentsUseCase
+import io.bifri.interview.cmp.padel.feature.tournament.ui.model.toUiModel
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.OpenTournament
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.ShowError
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsPartialState.DataLoaded
@@ -86,6 +87,7 @@ class TournamentsViewModel(
         .onStart { emit(Unit) }
         .flatMapLatest {
             getTournamentsUseCase()
+                .map { items -> items.map { it.toUiModel() } }
                 .map(::DataLoaded)
                 .onStart<TournamentsPartialState> { emit(DataLoading) }
                 .catch {

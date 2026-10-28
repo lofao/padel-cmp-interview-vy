@@ -47,6 +47,7 @@ import io.bifri.interview.cmp.padel.feature.tournament.ui.detail_court
 import io.bifri.interview.cmp.padel.feature.tournament.ui.detail_prize_money
 import io.bifri.interview.cmp.padel.feature.tournament.ui.detail_timezone
 import io.bifri.interview.cmp.padel.feature.tournament.ui.detail_venue
+import io.bifri.interview.cmp.padel.feature.tournament.ui.model.TournamentUiModel
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentNavigationAction.OpenMatches
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament.TournamentState.UiState
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournament_matches_button
@@ -191,7 +192,7 @@ private fun TournamentContent(
                     },
                 )
             }
-            val summary = remember(tournament) { tournament.toTournamentsTournament() }
+            val summary = remember(tournament) { TournamentUiModel(tournament = tournament.toTournamentsTournament()) }
             TournamentSummary(summary)
             TournamentDetails(tournament)
         }

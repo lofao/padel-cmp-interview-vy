@@ -32,6 +32,7 @@ import io.bifri.interview.cmp.padel.core.ui.LifecycleCollectEffect
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.ui.TournamentUiRes
 import io.bifri.interview.cmp.padel.feature.tournament.ui.component.TournamentSummary
+import io.bifri.interview.cmp.padel.feature.tournament.ui.model.TournamentUiModel
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.OpenTournament
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.ShowError
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsState.UiState
@@ -126,7 +127,7 @@ private fun EmptyTournaments(
 
 @Composable
 private fun TournamentsContent(
-    items: List<TournamentsTournament>,
+    items: List<TournamentUiModel>,
     contentPadding: PaddingValues,
     onTournamentClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
@@ -139,14 +140,14 @@ private fun TournamentsContent(
         items(
             items = items,
             key = { it.id },
-        ) { tournament ->
+        ) { tournamentItem ->
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { onTournamentClick(tournament.id) },
+                onClick = { onTournamentClick(tournamentItem.id) },
             ) {
                 TournamentSummary(
                     modifier = modifier.padding(dimens.cardPaddingMedium),
-                    tournament = tournament,
+                    item = tournamentItem,
                 )
             }
         }
@@ -172,13 +173,17 @@ private fun TournamentsScreenPreview() {
         TournamentsScreen(
             uiState = UiState(
                 items = listOf(
-                    previewTournament(
-                        id = 740L,
-                        name = "London P1 2026",
+                    TournamentUiModel(
+                        tournament = previewTournament(
+                            id = 740L,
+                            name = "London P1 2026",
+                        ),
                     ),
-                    previewTournament(
-                        id = 827L,
-                        name = "FIP Silver Bali Island Sports",
+                    TournamentUiModel(
+                        tournament = previewTournament(
+                            id = 827L,
+                            name = "FIP Silver Bali Island Sports",
+                        ),
                     ),
                 ),
                 isDataLoading = false,
