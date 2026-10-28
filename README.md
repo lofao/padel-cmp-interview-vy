@@ -112,11 +112,11 @@ The solution follows a strict commit history with one logical task per commit:
     - Displayed distance chips (e.g. `"12 km away"`) on tournament cards.
     - Tested coordinate distance calculations in `CoordinatesTest.kt`.
 - **Key Files Created / Modified:**
-    - [`LocationService.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/ui/src/commonMain/kotlin/io/bifri/interview/cmp/padel/core/ui/location/LocationService.kt)
-    - [`LocationService.android.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/ui/src/androidMain/kotlin/io/bifri/interview/cmp/padel/core/ui/location/LocationService.android.kt)
-    - [`LocationService.ios.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/ui/src/iosMain/kotlin/io/bifri/interview/cmp/padel/core/ui/location/LocationService.ios.kt)
+    - [`LocationService.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/location/src/commonMain/kotlin/io/bifri/interview/cmp/padel/core/location/LocationService.kt)
+    - [`LocationService.android.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/location/src/androidMain/kotlin/io/bifri/interview/cmp/padel/core/location/LocationService.android.kt)
+    - [`LocationService.ios.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/location/src/iosMain/kotlin/io/bifri/interview/cmp/padel/core/location/LocationService.ios.kt)
     - [`TournamentsViewModel.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/feature/tournament/ui/src/commonMain/kotlin/io/bifri/interview/cmp/padel/feature/tournament/ui/tournaments/TournamentsViewModel.kt)
-    - [`CoordinatesTest.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/ui/src/commonTest/kotlin/io/bifri/interview/cmp/padel/core/ui/location/CoordinatesTest.kt)
+    - [`CoordinatesTest.kt`](file:///Users/vadims.jasins/projects/padel-cmp-interview-vy/core/location/src/commonTest/kotlin/io/bifri/interview/cmp/padel/core/location/CoordinatesTest.kt)
 
 ---
 

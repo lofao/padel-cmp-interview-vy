@@ -26,9 +26,9 @@ import io.bifri.interview.cmp.padel.core.designsystem.component.pulltorefresh.Ap
 import io.bifri.interview.cmp.padel.core.designsystem.component.scaffold.AppScaffold
 import io.bifri.interview.cmp.padel.core.designsystem.theme.AppTheme
 import io.bifri.interview.cmp.padel.core.designsystem.theme.dimens
+import io.bifri.interview.cmp.padel.core.location.LocationPermissionEffect
 import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.LifecycleCollectEffect
-import io.bifri.interview.cmp.padel.core.ui.location.LocationPermissionEffect
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.ui.TournamentUiRes
 import io.bifri.interview.cmp.padel.feature.tournament.ui.component.TournamentSummary

@@ -5,12 +5,12 @@ import com.hoc081098.flowext.throttleTime
 import io.bifri.interview.cmp.padel.core.coroutines.extension.mutableSharedFlowOfInput
 import io.bifri.interview.cmp.padel.core.coroutines.extension.stateInViewModel
 import io.bifri.interview.cmp.padel.core.exception.ExceptionHandler
+import io.bifri.interview.cmp.padel.core.location.Coordinates
+import io.bifri.interview.cmp.padel.core.location.GeocoderService
+import io.bifri.interview.cmp.padel.core.location.LocationService
 import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.base.BaseViewModel
 import io.bifri.interview.cmp.padel.core.ui.input.InputThrottle.DefaultSkipDuration
-import io.bifri.interview.cmp.padel.core.ui.location.Coordinates
-import io.bifri.interview.cmp.padel.core.ui.location.GeocoderService
-import io.bifri.interview.cmp.padel.core.ui.location.LocationService
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.domain.usecase.GetTournamentsUseCase
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.OpenTournament
