@@ -7,6 +7,7 @@ import android.content.Context
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Looper
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -82,6 +83,7 @@ class DefaultLocationService(
                         MinTimeMs,
                         MinDistanceM,
                         listener,
+                        Looper.getMainLooper(),
                     )
                 }
 
@@ -91,6 +93,7 @@ class DefaultLocationService(
                         MinTimeMs,
                         MinDistanceM,
                         listener,
+                        Looper.getMainLooper(),
                     )
                 }
 
