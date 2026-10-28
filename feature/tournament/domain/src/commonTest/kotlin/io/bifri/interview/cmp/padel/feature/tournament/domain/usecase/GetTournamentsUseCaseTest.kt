@@ -10,9 +10,12 @@ import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.Tou
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentsResponseDto.TournamentDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.domain.mapper.TournamentsDomainMapper
+import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -45,7 +48,7 @@ class GetTournamentsUseCaseTest {
 
         val madridCoords = Coordinates(40.4168, -3.7038)
         val locationService = FakeLocationService(madridCoords)
-        val geocoderService = FakeGeocoderService(
+        val geocoderService = TrackingGeocoderService(
             mapOf(
                 "Madrid, ES" to Coordinates(40.4168, -3.7038),
                 "Barcelona, ES" to Coordinates(41.3851, 2.1734),
@@ -66,6 +69,52 @@ class GetTournamentsUseCaseTest {
         assertEquals("Tournament Barcelona", result[1].tournament.name)
     }
 
+    @Test
+    fun invoke_cachesGeocodedLocationsAcrossLocationUpdates() = runBlocking {
+        val repository = FakeTournamentRepository(
+            tournaments = listOf(
+                TournamentDto(id = 1L, name = "Barcelona 1", location = "Barcelona", country = "ES"),
+                TournamentDto(id = 2L, name = "Barcelona 2", location = "Barcelona", country = "ES"),
+                TournamentDto(id = 3L, name = "Madrid 1", location = "Madrid", country = "ES"),
+            ),
+        )
+
+        val mapper = TournamentsDomainMapper(
+            exceptionHandler = FakeExceptionHandler(),
+            dateTimeUtils = DateTimeUtils(),
+        )
+
+        val locationFlow = MutableStateFlow<Coordinates?>(Coordinates(40.4168, -3.7038))
+        val locationService = FlowLocationService(locationFlow)
+        val geocoderService = TrackingGeocoderService(
+            mapOf(
+                "Madrid, ES" to Coordinates(40.4168, -3.7038),
+                "Barcelona, ES" to Coordinates(41.3851, 2.1734),
+            ),
+        )
+
+        val useCase = GetTournamentsUseCase(
+            tournamentRepository = repository,
+            mapper = mapper,
+            locationService = locationService,
+            geocoderService = geocoderService,
+        )
+
+        val firstResult = useCase().first()
+        assertEquals("Madrid 1", firstResult[0].tournament.name)
+        // Geocoder should be called exactly twice (once for Barcelona, once for Madrid) despite 3 tournaments
+        assertEquals(2, geocoderService.callCount)
+
+        // Update user location to Barcelona
+        locationFlow.value = Coordinates(41.3851, 2.1734)
+
+        val secondResult = useCase().first()
+        assertEquals("Barcelona 1", secondResult[0].tournament.name)
+        assertEquals("Barcelona 2", secondResult[1].tournament.name)
+        // Geocoder call count should remain 2 because results were cached!
+        assertEquals(2, geocoderService.callCount)
+    }
+
     private class FakeTournamentRepository(
         private val tournaments: List<TournamentDto>,
     ) : TournamentRepository {
@@ -82,10 +131,20 @@ class GetTournamentsUseCaseTest {
         override fun observeLocation(): Flow<Coordinates?> = flowOf(location)
     }
 
-    private class FakeGeocoderService(
+    private class FlowLocationService(
+        private val locationFlow: Flow<Coordinates?>,
+    ) : LocationService {
+        override fun observeLocation(): Flow<Coordinates?> = locationFlow
+    }
+
+    private class TrackingGeocoderService(
         private val coordinatesMap: Map<String, Coordinates>,
     ) : GeocoderService {
+        var callCount = 0
+            private set
+
         override suspend fun geocode(location: String?, country: String?): Coordinates? {
+            callCount++
             val key = listOfNotNull(location, country).joinToString(", ")
             return coordinatesMap[key]
         }
