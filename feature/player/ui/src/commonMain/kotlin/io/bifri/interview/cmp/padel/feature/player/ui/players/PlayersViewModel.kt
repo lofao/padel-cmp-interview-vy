@@ -8,10 +8,10 @@ import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.base.BaseViewModel
 import io.bifri.interview.cmp.padel.feature.player.domain.usecase.GetPlayersUseCase
 import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersNavigationAction.ShowError
-import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.Loading
-import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.LoadingFailed
+import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.DataLoaded
+import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.DataLoading
+import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.DataLoadingError
 import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.Navigate
-import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.PlayersLoaded
 import io.bifri.interview.cmp.padel.feature.player.ui.players.PlayersPartialState.SearchQueryChanged
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -32,7 +32,7 @@ class PlayersViewModel(
     private val getPlayersUseCase: GetPlayersUseCase,
 ) : BaseViewModel(coroutineDispatcher, exceptionHandler) {
 
-    private val refreshClicks = mutableSharedFlowOfInput<Unit>()
+    private val refreshes = mutableSharedFlowOfInput<Unit>()
     private val searchQueryInput = mutableSharedFlowOfInput<String>()
     private val state: Flow<PlayersState> = _state
     internal val uiState = state.map { it.uiState }
@@ -40,7 +40,7 @@ class PlayersViewModel(
 
     private val _state: Flow<PlayersState>
         get() = merge(
-            refreshClicksStream(),
+            dataStream(),
             searchQueryStream(),
         )
             .catch {
@@ -55,7 +55,7 @@ class PlayersViewModel(
             )
 
     internal fun onRefresh() {
-        refreshClicks.tryEmit(Unit)
+        refreshes.tryEmit(Unit)
     }
 
     internal fun onSearchQueryChange(query: String) {
@@ -66,15 +66,17 @@ class PlayersViewModel(
         searchQueryInput.tryEmit("")
     }
 
-    private fun playersStream(): Flow<PlayersPartialState> = flow {
-        emit(Loading)
-        emit(PlayersLoaded(getPlayersUseCase()))
-    }
-        .catch { emit(LoadingFailed(it)) }
-
-    private fun refreshClicksStream(): Flow<PlayersPartialState> = refreshClicks
+    private fun dataStream(): Flow<PlayersPartialState> = refreshes
         .onStart { emit(Unit) }
-        .flatMapLatest { playersStream() }
+        .flatMapLatest {
+            flow { emit(getPlayersUseCase()) }
+                .map(::DataLoaded)
+                .onStart<PlayersPartialState> { emit(DataLoading) }
+                .catch {
+                    exceptionHandler.handleException(it)
+                    emit(DataLoadingError(it))
+                }
+        }
 
     private fun searchQueryStream(): Flow<PlayersPartialState> = searchQueryInput
         .map { SearchQueryChanged(it) }
@@ -83,12 +85,12 @@ class PlayersViewModel(
         prevState: PlayersState,
         changes: PlayersPartialState,
     ): PlayersState = when (changes) {
-        Loading -> prevState.copy(
+        DataLoading -> prevState.copy(
             uiState = prevState.uiState.copy(isDataLoading = true),
             event = null,
         )
 
-        is PlayersLoaded -> prevState.copy(
+        is DataLoaded -> prevState.copy(
             uiState = prevState.uiState.copy(
                 items = changes.players,
                 isDataLoading = false,
@@ -97,7 +99,7 @@ class PlayersViewModel(
             event = null,
         )
 
-        is LoadingFailed -> prevState.copy(
+        is DataLoadingError -> prevState.copy(
             uiState = prevState.uiState.copy(isDataLoading = false),
             event = Event(ShowError(changes.error)),
         )
