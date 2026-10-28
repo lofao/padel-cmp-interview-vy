@@ -33,13 +33,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.SubcomposeAsyncImage
 import io.bifri.interview.cmp.padel.core.designsystem.component.appbar.CollapsingTopAppBar
 import io.bifri.interview.cmp.padel.core.designsystem.component.avatar.PlayerAvatar
 import io.bifri.interview.cmp.padel.core.designsystem.component.button.BackIconButton
@@ -323,8 +320,6 @@ private fun PlayerListItem(
                     text = player.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
                 player.gender?.takeIf { it.isNotBlank() }?.let { gender ->
                     Text(

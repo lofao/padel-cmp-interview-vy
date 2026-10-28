@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -97,8 +96,8 @@ private fun MatchesScreen(
     uiState: UiState?,
     onRefresh: () -> Unit,
     onMatchClick: (Long, Int?) -> Unit,
-    onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
+    onBackClick: () -> Unit = {},
 ) {
     if (uiState == null) return
 
@@ -288,14 +287,11 @@ private fun TeamSummaryRow(
     ) {
         val fontWeight = if (isWinner) FontWeight.Bold else FontWeight.Normal
         val color = if (isWinner) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-        // ellipse text at the end
         Text(
             modifier = Modifier.weight(1f),
             text = teamName,
             fontWeight = fontWeight,
             color = color,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
         )
         if (hasScores) {
             Row(

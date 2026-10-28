@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.plus
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
@@ -26,19 +25,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.SubcomposeAsyncImage
 import io.bifri.interview.cmp.padel.core.designsystem.component.appbar.CollapsingTopAppBar
 import io.bifri.interview.cmp.padel.core.designsystem.component.avatar.PlayerAvatar
 import io.bifri.interview.cmp.padel.core.designsystem.component.button.BackIconButton
-import io.bifri.interview.cmp.padel.core.designsystem.component.placeholder.ShimmerBox
 import io.bifri.interview.cmp.padel.core.designsystem.component.pulltorefresh.AppPullToRefreshBox
 import io.bifri.interview.cmp.padel.core.designsystem.component.scaffold.AppScaffold
 import io.bifri.interview.cmp.padel.core.designsystem.theme.AppTheme
@@ -299,8 +293,6 @@ private fun TeamScoreRow(
                         text = player.name.orEmpty(),
                         fontWeight = fontWeight,
                         color = color,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
                     )
                 }
                 if (isFirstPlayer) {
