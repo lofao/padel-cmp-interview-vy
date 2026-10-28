@@ -8,6 +8,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.defaultPopTransitionSpec
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.bifri.interview.cmp.padel.core.ui.navigation.pop
+import io.bifri.interview.cmp.padel.core.ui.navigation.rememberDefaultNavEntryDecorators
 import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerRoute.PlayerDetail
 import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerRoute.Players
 import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailRoute
@@ -42,11 +43,11 @@ fun PlayerNavDisplay(
 
     NavDisplay(
         backStack = backStack,
+        entryDecorators = rememberDefaultNavEntryDecorators(),
         predictivePopTransitionSpec = { defaultPopTransitionSpec<NavKey>()() },
         entryProvider = entryProvider {
             entry<Players> { route ->
                 PlayersRoute(
-                    tournamentId = route.tournamentId,
                     tournamentName = route.tournamentName,
                     onBackClick = onBackClick,
                     onPlayerClick = { playerId ->

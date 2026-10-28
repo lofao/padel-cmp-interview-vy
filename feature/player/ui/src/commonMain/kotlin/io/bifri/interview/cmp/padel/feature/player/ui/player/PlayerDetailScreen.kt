@@ -80,7 +80,7 @@ fun PlayerDetailRoute(
     playerId: Long,
     onBackClick: () -> Unit,
     onError: (Throwable) -> Unit,
-    viewModel: PlayerDetailViewModel = koinViewModel(key = playerId.toString()) {
+    viewModel: PlayerDetailViewModel = koinViewModel {
         parametersOf(playerId)
     },
 ) {

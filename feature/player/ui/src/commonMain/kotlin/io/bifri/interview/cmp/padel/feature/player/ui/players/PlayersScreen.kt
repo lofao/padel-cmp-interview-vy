@@ -72,12 +72,11 @@ private val PlayerAvatarSize = 48.dp
 
 @Composable
 fun PlayersRoute(
-    tournamentId: Long,
     tournamentName: String,
     onBackClick: () -> Unit,
     onError: (Throwable) -> Unit,
     onPlayerClick: (Long) -> Unit = {},
-    viewModel: PlayersViewModel = koinViewModel(key = tournamentId.toString()) {
+    viewModel: PlayersViewModel = koinViewModel {
         parametersOf(tournamentName)
     },
 ) {
