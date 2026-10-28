@@ -1,6 +1,6 @@
 package io.bifri.interview.cmp.padel.feature.player.data.datasource.demo
 
-import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayerDetailDto
+import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayerResponseDto
 import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayersResponseDto
 import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayersResponseDto.PlayerDto
 
@@ -156,9 +156,9 @@ internal class DemoPlayersDataSource {
 
     fun getPlayers(): PlayersResponseDto = players
 
-    fun getPlayer(id: Long): PlayerDetailDto? {
+    fun getPlayer(id: Long): PlayerResponseDto? {
         val player = players.data?.firstOrNull { it?.id == id } ?: return null
-        return PlayerDetailDto(
+        return PlayerResponseDto(
             id = player.id,
             name = player.name,
             photoUrl = player.photoUrl,
