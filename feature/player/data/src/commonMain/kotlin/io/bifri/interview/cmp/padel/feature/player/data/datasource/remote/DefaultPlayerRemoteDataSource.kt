@@ -1,6 +1,6 @@
 package io.bifri.interview.cmp.padel.feature.player.data.datasource.remote
 
-import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayerDetailDto
+import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayerResponseDto
 import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayersResponseDto
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -12,6 +12,6 @@ internal class DefaultPlayerRemoteDataSource(
     override suspend fun getPlayers(): PlayersResponseDto =
         httpClient.get("/api/players").body()
 
-    override suspend fun getPlayer(id: Long): PlayerDetailDto =
+    override suspend fun getPlayer(id: Long): PlayerResponseDto =
         httpClient.get("/api/players/$id").body()
 }

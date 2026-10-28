@@ -3,6 +3,7 @@ package io.bifri.interview.cmp.padel.feature.player.ui.navigation
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
+@Serializable
 sealed interface PlayerRoute : NavKey {
     @Serializable
     data class Players(

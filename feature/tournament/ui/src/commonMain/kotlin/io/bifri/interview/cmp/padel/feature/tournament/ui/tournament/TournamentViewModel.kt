@@ -39,7 +39,7 @@ class TournamentViewModel(
     private val matchesClicks = mutableSharedFlowOfInput<String>()
     private val playersClicks = mutableSharedFlowOfInput<String>()
     private val state: Flow<TournamentState> = _state
-    internal val uiState = state.map { it.uiState }.distinctUntilChanged()
+    internal val uiState = state.map { it.uiState }
     internal val events = state.mapNotNull { it.event }
 
     internal fun onRefresh() {

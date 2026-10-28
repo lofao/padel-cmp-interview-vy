@@ -8,62 +8,48 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.defaultPopTransitionSpec
 import io.bifri.interview.cmp.padel.core.ui.navigation.pop
 import io.bifri.interview.cmp.padel.core.ui.navigation.rememberDefaultNavEntryDecorators
-import io.bifri.interview.cmp.padel.feature.match.ui.navigation.MatchNavDisplay
-import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerNavDisplay
-import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailRoute
-import io.bifri.interview.cmp.padel.feature.tournament.ui.navigation.TournamentNavDisplay
-import io.bifri.interview.cmp.padel.navigation.AppRoute.MatchGraph
-import io.bifri.interview.cmp.padel.navigation.AppRoute.PlayerDetailGraph
-import io.bifri.interview.cmp.padel.navigation.AppRoute.PlayerGraph
-import io.bifri.interview.cmp.padel.navigation.AppRoute.TournamentGraph
+import io.bifri.interview.cmp.padel.feature.match.ui.navigation.MatchRoute.Matches
+import io.bifri.interview.cmp.padel.feature.match.ui.navigation.matchEntries
+import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerRoute.PlayerDetail
+import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerRoute.Players
+import io.bifri.interview.cmp.padel.feature.player.ui.navigation.playerEntries
+import io.bifri.interview.cmp.padel.feature.tournament.ui.navigation.tournamentEntries
 
 @Composable
 fun AppNavDisplay(
     backStack: NavBackStack<NavKey>,
     onError: (Throwable) -> Unit,
 ) {
+    val onNavigate: (NavKey) -> Unit = { backStack.add(it) }
+    val onBack: () -> Unit = { backStack.pop() }
+
     NavDisplay(
         backStack = backStack,
         entryDecorators = rememberDefaultNavEntryDecorators(),
         predictivePopTransitionSpec = { defaultPopTransitionSpec<NavKey>()() },
         entryProvider = entryProvider {
-            entry<TournamentGraph> {
-                TournamentNavDisplay(
-                    onMatchesClick = { tournamentId, tournamentName ->
-                        backStack.add(MatchGraph(tournamentId, tournamentName))
-                    },
-                    onPlayersClick = { tournamentId, tournamentName ->
-                        backStack.add(PlayerGraph(tournamentId, tournamentName))
-                    },
-                    onError = onError,
-                )
-            }
-            entry<MatchGraph> { route ->
-                MatchNavDisplay(
-                    tournamentId = route.tournamentId,
-                    tournamentName = route.tournamentName,
-                    onBackClick = { backStack.pop() },
-                    onPlayerClick = { playerId ->
-                        backStack.add(PlayerDetailGraph(playerId))
-                    },
-                    onError = onError,
-                )
-            }
-            entry<PlayerGraph> { route ->
-                PlayerNavDisplay(
-                    tournamentId = route.tournamentId,
-                    tournamentName = route.tournamentName,
-                    onBackClick = { backStack.pop() },
-                    onError = onError,
-                )
-            }
-            entry<PlayerDetailGraph> { route ->
-                PlayerDetailRoute(
-                    playerId = route.playerId,
-                    onBackClick = { backStack.pop() },
-                    onError = onError,
-                )
-            }
+            tournamentEntries(
+                onNavigate = onNavigate,
+                onBack = onBack,
+                onMatchesClick = { tournamentId, tournamentName ->
+                    onNavigate(Matches(tournamentId, tournamentName))
+                },
+                onPlayersClick = { tournamentId, tournamentName ->
+                    onNavigate(Players(tournamentId, tournamentName))
+                },
+                onError = onError,
+            )
+            matchEntries(
+                onNavigate = onNavigate,
+                onBack = onBack,
+                onPlayerClick = { playerId -> onNavigate(PlayerDetail(playerId)) },
+                onError = onError,
+            )
+            playerEntries(
+                onNavigate = onNavigate,
+                onBack = onBack,
+                onError = onError,
+            )
         },
     )
 }

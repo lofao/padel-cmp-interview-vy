@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.em
 
 val SetColumnWidth: Dp = 35.dp
 
@@ -57,7 +57,7 @@ fun SetScoreCell(
  *
  * Standard scores like `"6"` or `"4"` are returned as plain text. Scores containing tiebreak notation
  * like `"6(5)"` are formatted such that the main games count (`"6"`) is rendered as standard text
- * and the tiebreak points (`"(5)"`) are styled as superscript with a smaller font size (`11.sp`),
+ * and the tiebreak points (`"(5)"`) are styled as superscript at 75% of the surrounding font size (`0.75.em`),
  * following professional tennis/padel scoreboard conventions.
  *
  * @param score The raw score string to format (e.g., `"6"`, `"6(5)"`, or `null`).
@@ -74,7 +74,7 @@ internal fun formatSetScore(score: String?): AnnotatedString {
             append(games)
             withStyle(
                 SpanStyle(
-                    fontSize = 11.sp,
+                    fontSize = 0.75.em,
                     baselineShift = BaselineShift.Superscript,
                 ),
             ) {

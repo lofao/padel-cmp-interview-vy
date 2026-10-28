@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PairDto(
+data class PairResponseDto(
     @SerialName("players") val players: List<PairPlayerDto?>? = null,
 ) {
     @Serializable

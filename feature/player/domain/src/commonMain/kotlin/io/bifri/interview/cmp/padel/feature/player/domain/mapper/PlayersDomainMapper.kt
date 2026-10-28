@@ -1,13 +1,13 @@
 package io.bifri.interview.cmp.padel.feature.player.domain.mapper
 
-import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayerDetailDto
+import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayerResponseDto
 import io.bifri.interview.cmp.padel.feature.player.data.datasource.model.PlayersResponseDto
 import io.bifri.interview.cmp.padel.feature.player.domain.model.Player
 
 internal fun PlayersResponseDto.toPlayers(): List<Player> =
     data?.mapNotNull { it?.toPlayer() }.orEmpty()
 
-internal fun PlayerDetailDto?.toPlayer(): Player? {
+internal fun PlayerResponseDto?.toPlayer(): Player? {
     this ?: return null
     val playerId = id ?: return null
     val playerName = name ?: return null

@@ -8,10 +8,10 @@ import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.base.BaseViewModel
 import io.bifri.interview.cmp.padel.feature.player.domain.usecase.GetPlayerUseCase
 import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailNavigationAction.ShowError
-import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailPartialState.Loading
-import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailPartialState.LoadingFailed
+import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailPartialState.DataLoaded
+import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailPartialState.DataLoading
+import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailPartialState.DataLoadingError
 import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailPartialState.Navigate
-import io.bifri.interview.cmp.padel.feature.player.ui.player.PlayerDetailPartialState.PlayerLoaded
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -30,13 +30,13 @@ class PlayerDetailViewModel(
     private val getPlayerUseCase: GetPlayerUseCase,
 ) : BaseViewModel(coroutineDispatcher, exceptionHandler) {
 
-    private val refreshClicks = mutableSharedFlowOfInput<Unit>()
+    private val refreshes = mutableSharedFlowOfInput<Unit>()
     private val state: Flow<PlayerDetailState> = _state
     internal val uiState = state.map { it.uiState }
     internal val events = state.mapNotNull { it.event }
 
     private val _state: Flow<PlayerDetailState>
-        get() = refreshClicksStream()
+        get() = dataStream()
             .catch {
                 exceptionHandler.handleException(it)
                 emit(Navigate(ShowError(it)))
@@ -49,29 +49,31 @@ class PlayerDetailViewModel(
             )
 
     internal fun onRefresh() {
-        refreshClicks.tryEmit(Unit)
+        refreshes.tryEmit(Unit)
     }
 
-    private fun playerStream(): Flow<PlayerDetailPartialState> = flow {
-        emit(Loading)
-        emit(PlayerLoaded(getPlayerUseCase(playerId)))
-    }
-        .catch { emit(LoadingFailed(it)) }
-
-    private fun refreshClicksStream(): Flow<PlayerDetailPartialState> = refreshClicks
+    private fun dataStream(): Flow<PlayerDetailPartialState> = refreshes
         .onStart { emit(Unit) }
-        .flatMapLatest { playerStream() }
+        .flatMapLatest {
+            flow { emit(getPlayerUseCase(playerId)) }
+                .map(::DataLoaded)
+                .onStart<PlayerDetailPartialState> { emit(DataLoading) }
+                .catch {
+                    exceptionHandler.handleException(it)
+                    emit(DataLoadingError(it))
+                }
+        }
 
     private fun viewStateReducer(
         prevState: PlayerDetailState,
         changes: PlayerDetailPartialState,
     ): PlayerDetailState = when (changes) {
-        Loading -> prevState.copy(
+        DataLoading -> prevState.copy(
             uiState = prevState.uiState.copy(isDataLoading = true),
             event = null,
         )
 
-        is PlayerLoaded -> prevState.copy(
+        is DataLoaded -> prevState.copy(
             uiState = prevState.uiState.copy(
                 player = changes.player,
                 isDataLoading = false,
@@ -79,7 +81,7 @@ class PlayerDetailViewModel(
             event = null,
         )
 
-        is LoadingFailed -> prevState.copy(
+        is DataLoadingError -> prevState.copy(
             uiState = prevState.uiState.copy(isDataLoading = false),
             event = Event(ShowError(changes.error)),
         )
