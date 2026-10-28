@@ -2,20 +2,35 @@
 
 package io.bifri.interview.cmp.padel.core.location
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 class DefaultLocationService(
     private val context: Context,
 ) : LocationService {
+    private val permissionTrigger = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
+
+    override fun onPermissionUpdated() {
+        permissionTrigger.tryEmit(Unit)
+    }
+
     @SuppressLint("MissingPermission")
     override fun observeLocation(): Flow<Coordinates?> = callbackFlow {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
@@ -26,18 +41,71 @@ class DefaultLocationService(
             return@callbackFlow
         }
 
+        var isListenerRegistered = false
         val listener = createLocationListener()
-        val lastLocationSent = sendLastKnownLocation(locationManager)
 
-        requestLocationUpdates(locationManager, listener, lastLocationSent)
+        fun tryStartUpdates() {
+            if (isListenerRegistered) return
+            if (!context.hasLocationPermission()) {
+                trySend(null)
+                return
+            }
+
+            val lastLocationSent = sendLastKnownLocation(locationManager)
+            if (requestLocationUpdates(locationManager, listener, lastLocationSent)) {
+                isListenerRegistered = true
+            }
+        }
+
+        // Try initially
+        tryStartUpdates()
+
+        // Register broadcast receiver for location provider state changes
+        val providerReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                tryStartUpdates()
+            }
+        }
+        val intentFilter = IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION)
+        ContextCompat.registerReceiver(
+            context,
+            providerReceiver,
+            intentFilter,
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+
+        // React to permission grant/updates
+        val permissionJob = permissionTrigger.onEach {
+            tryStartUpdates()
+        }.launchIn(this)
 
         awaitClose {
+            permissionJob.cancel()
             try {
-                locationManager.removeUpdates(listener)
+                context.unregisterReceiver(providerReceiver)
             } catch (_: Exception) {
                 // Ignore cleanup errors
             }
+            if (isListenerRegistered) {
+                try {
+                    locationManager.removeUpdates(listener)
+                } catch (_: Exception) {
+                    // Ignore cleanup errors
+                }
+            }
         }
+    }
+
+    private fun Context.hasLocationPermission(): Boolean {
+        val fine = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+        ) == PackageManager.PERMISSION_GRANTED
+        return fine || coarse
     }
 
     private fun ProducerScope<Coordinates?>.createLocationListener() = object : LocationListener {
@@ -74,40 +142,47 @@ class DefaultLocationService(
         locationManager: LocationManager,
         listener: LocationListener,
         lastLocationSent: Boolean,
-    ) {
-        try {
-            when {
-                locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> {
-                    locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER,
-                        MinTimeMs,
-                        MinDistanceM,
-                        listener,
-                        Looper.getMainLooper(),
-                    )
-                }
+    ): Boolean = try {
+        when {
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> {
+                locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    MinTimeMs,
+                    MinDistanceM,
+                    listener,
+                    Looper.getMainLooper(),
+                )
+                true
+            }
 
-                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> {
-                    locationManager.requestLocationUpdates(
-                        LocationManager.NETWORK_PROVIDER,
-                        MinTimeMs,
-                        MinDistanceM,
-                        listener,
-                        Looper.getMainLooper(),
-                    )
-                }
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> {
+                locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    MinTimeMs,
+                    MinDistanceM,
+                    listener,
+                    Looper.getMainLooper(),
+                )
+                true
+            }
 
-                !lastLocationSent -> {
+            else -> {
+                if (!lastLocationSent) {
                     trySend(null)
                 }
-            }
-        } catch (_: SecurityException) {
-            trySend(null)
-        } catch (_: Exception) {
-            if (!lastLocationSent) {
-                trySend(null)
+                false
             }
         }
+    } catch (_: SecurityException) {
+        if (!lastLocationSent) {
+            trySend(null)
+        }
+        false
+    } catch (_: Exception) {
+        if (!lastLocationSent) {
+            trySend(null)
+        }
+        false
     }
 
     companion object {

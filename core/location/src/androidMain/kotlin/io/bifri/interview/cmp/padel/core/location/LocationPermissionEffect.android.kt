@@ -8,14 +8,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import org.koin.compose.koinInject
 
 @Composable
 @Suppress("ModifierMissing")
 actual fun LocationPermissionEffect() {
     val context = LocalContext.current
+    val locationService: LocationService = koinInject()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) {}
+    ) { permissions ->
+        if (permissions.values.any { it }) {
+            locationService.onPermissionUpdated()
+        }
+    }
 
     LaunchedEffect(Unit) {
         val hasFine = ContextCompat.checkSelfPermission(
@@ -34,6 +40,8 @@ actual fun LocationPermissionEffect() {
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                 ),
             )
+        } else {
+            locationService.onPermissionUpdated()
         }
     }
 }
