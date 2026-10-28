@@ -7,7 +7,6 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.defaultPopTransitionSpec
 import androidx.savedstate.serialization.SavedStateConfiguration
-import io.bifri.interview.cmp.padel.core.ui.navigation.pop
 import io.bifri.interview.cmp.padel.core.ui.navigation.rememberDefaultNavEntryDecorators
 import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerRoute.PlayerDetail
 import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerRoute.Players
@@ -28,18 +27,14 @@ private val PlayerNavConfiguration = SavedStateConfiguration {
 
 @Composable
 fun PlayerNavDisplay(
-    tournamentId: Long,
-    tournamentName: String,
+    startRoute: PlayerRoute,
     onBackClick: () -> Unit,
     onError: (Throwable) -> Unit,
 ) {
-    val backStack = rememberNavBackStack(
-        PlayerNavConfiguration,
-        Players(
-            tournamentId = tournamentId,
-            tournamentName = tournamentName,
-        ),
-    )
+    val backStack = rememberNavBackStack(PlayerNavConfiguration, startRoute)
+    val navigateBack: () -> Unit = {
+        if (backStack.size > 1) backStack.removeLastOrNull() else onBackClick()
+    }
 
     NavDisplay(
         backStack = backStack,
@@ -49,7 +44,7 @@ fun PlayerNavDisplay(
             entry<Players> { route ->
                 PlayersRoute(
                     tournamentName = route.tournamentName,
-                    onBackClick = onBackClick,
+                    onBackClick = navigateBack,
                     onPlayerClick = { playerId ->
                         backStack.add(PlayerDetail(playerId = playerId))
                     },
@@ -59,7 +54,7 @@ fun PlayerNavDisplay(
             entry<PlayerDetail> { route ->
                 PlayerDetailRoute(
                     playerId = route.playerId,
-                    onBackClick = { backStack.pop() },
+                    onBackClick = navigateBack,
                     onError = onError,
                 )
             }

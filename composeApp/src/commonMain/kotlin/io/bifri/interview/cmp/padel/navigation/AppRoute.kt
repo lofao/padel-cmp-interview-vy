@@ -1,6 +1,7 @@
 package io.bifri.interview.cmp.padel.navigation
 
 import androidx.navigation3.runtime.NavKey
+import io.bifri.interview.cmp.padel.feature.player.ui.navigation.PlayerRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,18 +11,12 @@ sealed interface AppRoute : NavKey {
 
     @Serializable
     data class PlayerGraph(
-        val tournamentId: Long,
-        val tournamentName: String,
+        val startRoute: PlayerRoute,
     ) : AppRoute
 
     @Serializable
     data class MatchGraph(
         val tournamentId: Long,
         val tournamentName: String,
-    ) : AppRoute
-
-    @Serializable
-    data class PlayerDetailGraph(
-        val playerId: Long,
     ) : AppRoute
 }
