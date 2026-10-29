@@ -23,16 +23,35 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+/**
+ * Android implementation of [LocationService] using system [LocationManager].
+ *
+ * Key features:
+ * - Emits real-time location changes as [Coordinates] inside a [callbackFlow].
+ * - Handles runtime permission checks and re-evaluates location updates when permissions change.
+ * - Listens for system provider state changes (GPS/Network enabled/disabled) via [BroadcastReceiver].
+ * - Emits last known location fix immediately when available for fast initial sorting.
+ * - Safely unregisters location listeners and broadcast receivers when the flow collection stops.
+ */
 class DefaultLocationService(
     private val context: Context,
 ) : LocationService {
     private val logger = Logger.withTag("DefaultLocationService")
+
+    // Event trigger used when runtime location permissions are granted or updated.
     private val permissionTrigger = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
 
+    /**
+     * Notifies the location service that location permissions were updated in the UI layer.
+     */
     override fun onPermissionUpdated() {
         permissionTrigger.tryEmit(Unit)
     }
 
+    /**
+     * Observes current device location updates as a cold [Flow] of nullable [Coordinates].
+     * Emits `null` if location services are disabled, unavailable, or permission is denied.
+     */
     @SuppressLint("MissingPermission")
     override fun observeLocation(): Flow<Coordinates?> = callbackFlow {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
@@ -46,6 +65,7 @@ class DefaultLocationService(
         var isListenerRegistered = false
         val listener = createLocationListener()
 
+        // Attempts to start updates if permission is granted and updates are not already active.
         fun tryStartUpdates() {
             if (isListenerRegistered) return
             if (!context.hasLocationPermission()) {
@@ -59,10 +79,10 @@ class DefaultLocationService(
             }
         }
 
-        // Try initially
+        // Perform initial check on subscription
         tryStartUpdates()
 
-        // Register broadcast receiver for location provider state changes
+        // Register receiver for provider state toggles (e.g. user toggling GPS on/off in quick settings)
         val providerReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 tryStartUpdates()
@@ -76,11 +96,12 @@ class DefaultLocationService(
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
 
-        // React to permission grant/updates
+        // React to runtime permission updates from the UI
         val permissionJob = permissionTrigger.onEach {
             tryStartUpdates()
         }.launchIn(this)
 
+        // Clean up listeners and broadcast receivers when flow collector cancels
         awaitClose {
             permissionJob.cancel()
             try {
@@ -100,6 +121,7 @@ class DefaultLocationService(
         }
     }
 
+    // Checks whether fine or coarse location permission is granted.
     private fun Context.hasLocationPermission(): Boolean {
         val fine = ContextCompat.checkSelfPermission(
             this,
@@ -112,6 +134,7 @@ class DefaultLocationService(
         return fine || coarse
     }
 
+    // Creates a LocationListener that forwards incoming Android Location objects to the callback flow.
     private fun ProducerScope<Coordinates?>.createLocationListener() = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             trySend(Coordinates(location.latitude, location.longitude))
@@ -124,6 +147,7 @@ class DefaultLocationService(
         }
     }
 
+    // Checks GPS and Network providers for cached last known location fixes to emit immediately.
     @SuppressLint("MissingPermission")
     private fun ProducerScope<Coordinates?>.sendLastKnownLocation(locationManager: LocationManager): Boolean = try {
         val lastKnownGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
@@ -143,6 +167,7 @@ class DefaultLocationService(
         false
     }
 
+    // Requests continuous location updates using GPS provider if available, or Network provider as fallback.
     @SuppressLint("MissingPermission")
     private fun ProducerScope<Coordinates?>.requestLocationUpdates(
         locationManager: LocationManager,
