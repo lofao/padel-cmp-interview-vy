@@ -5,9 +5,11 @@ import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.demo.Demo
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.demo.DemoTournamentsDataSource
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.remote.DefaultTournamentRemoteDataSource
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.remote.TournamentRemoteDataSource
+import io.bifri.interview.cmp.padel.feature.tournament.data.geocoder.DefaultTournamentGeocoder
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.DefaultUserLocationRepository
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.DemoTournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.PadelApiTournamentRepository
+import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentGeocoder
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.UserLocationRepository
 import org.koin.dsl.module
@@ -27,4 +29,5 @@ val TournamentDataModule = module {
     single<DemoTournamentsDataSource> { DemoTournamentsDataSource() }
     single<DemoTournamentDataSource> { DemoTournamentDataSource() }
     single<UserLocationRepository> { DefaultUserLocationRepository(locationService = get()) }
+    single<TournamentGeocoder> { DefaultTournamentGeocoder(cachedGeocoderService = get()) }
 }

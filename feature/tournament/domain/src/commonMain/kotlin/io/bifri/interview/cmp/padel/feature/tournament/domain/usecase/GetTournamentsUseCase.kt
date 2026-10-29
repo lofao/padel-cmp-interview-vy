@@ -1,13 +1,13 @@
 package io.bifri.interview.cmp.padel.feature.tournament.domain.usecase
 
 import co.touchlab.kermit.Logger
+import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentGeocoder
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.UserLocationRepository
 import io.bifri.interview.cmp.padel.feature.tournament.domain.mapper.TournamentsDomainMapper
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
-import io.bifri.interview.cmp.padel.feature.tournament.domain.repository.TournamentGeocoder
 import io.bifri.interview.cmp.padel.feature.tournament.domain.util.TournamentDistanceCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -50,7 +50,9 @@ class GetTournamentsUseCase(
             }
 
             val locations = tournaments.map { it.location to it.country }
-            val geocodedMap = geocoder.geocodeBatch(locations)
+            val geocodedMap = geocoder.geocodeBatch(locations).mapValues { (_, coords) ->
+                coords?.let { LocationCoordinates(it.latitude, it.longitude) }
+            }
 
             TournamentDistanceCalculator.sortByDistance(
                 tournaments = tournaments,

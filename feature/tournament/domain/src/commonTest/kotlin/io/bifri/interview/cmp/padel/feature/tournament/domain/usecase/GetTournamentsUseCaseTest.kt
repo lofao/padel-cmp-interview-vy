@@ -6,12 +6,12 @@ import io.bifri.interview.cmp.padel.core.location.Coordinates
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentResponseDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentsResponseDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentsResponseDto.TournamentDto
+import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentGeocoder
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.UserLocationRepository
 import io.bifri.interview.cmp.padel.feature.tournament.domain.mapper.TournamentsDomainMapper
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
-import io.bifri.interview.cmp.padel.feature.tournament.domain.repository.TournamentGeocoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -217,11 +217,13 @@ class GetTournamentsUseCaseTest {
         var callCount = 0
             private set
 
-        override suspend fun geocodeBatch(locations: List<Pair<String?, String?>>): Map<String, LocationCoordinates?> {
+        override suspend fun geocodeBatch(locations: List<Pair<String?, String?>>): Map<String, Coordinates?> {
             callCount++
             return locations.associate { (location, country) ->
                 val key = buildLocationKey(location, country)
-                key to coordinatesMap[key]
+                val domainCoords = coordinatesMap[key]
+                val coords = domainCoords?.let { Coordinates(it.latitude, it.longitude) }
+                key to coords
             }
         }
 
