@@ -7,7 +7,6 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.core.location)
             implementation(projects.feature.tournament.data)
         }
     }

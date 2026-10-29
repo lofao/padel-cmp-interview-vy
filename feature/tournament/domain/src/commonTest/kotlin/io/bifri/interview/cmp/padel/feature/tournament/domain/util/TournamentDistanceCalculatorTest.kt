@@ -1,6 +1,6 @@
 package io.bifri.interview.cmp.padel.feature.tournament.domain.util
 
-import io.bifri.interview.cmp.padel.core.location.Coordinates
+import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,9 +11,9 @@ class TournamentDistanceCalculatorTest {
 
     @Test
     fun isLocationChangeSignificant_detectsMinorAndMajorChanges() {
-        val initial = Coordinates(40.4168000, -3.7038000)
-        val minorJitter = Coordinates(40.4168010, -3.7038000) // ~1.1 meters
-        val majorChange = Coordinates(41.3851000, 2.1734000) // Barcelona (~500 km)
+        val initial = LocationCoordinates(40.4168000, -3.7038000)
+        val minorJitter = LocationCoordinates(40.4168010, -3.7038000) // ~1.1 meters
+        val majorChange = LocationCoordinates(41.3851000, 2.1734000) // Barcelona (~500 km)
 
         assertFalse(TournamentDistanceCalculator.isLocationChangeSignificant(initial, minorJitter))
         assertTrue(TournamentDistanceCalculator.isLocationChangeSignificant(initial, majorChange))
@@ -24,8 +24,8 @@ class TournamentDistanceCalculatorTest {
 
     @Test
     fun sortByDistance_sortsTournamentsByProximityToUser() {
-        val madridCoords = Coordinates(40.4168, -3.7038)
-        val barcelonaCoords = Coordinates(41.3851, 2.1734)
+        val madridCoords = LocationCoordinates(40.4168, -3.7038)
+        val barcelonaCoords = LocationCoordinates(41.3851, 2.1734)
 
         val tournaments = listOf(
             TournamentsTournament(
@@ -50,7 +50,7 @@ class TournamentDistanceCalculatorTest {
             ),
         )
 
-        val userInMadrid = Coordinates(40.4168, -3.7038)
+        val userInMadrid = LocationCoordinates(40.4168, -3.7038)
         val geocodedMap = mapOf(
             "barcelona|es" to barcelonaCoords,
             "madrid|es" to madridCoords,

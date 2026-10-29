@@ -2,18 +2,15 @@ package io.bifri.interview.cmp.padel.feature.tournament.domain.usecase
 
 import io.bifri.interview.cmp.padel.core.exception.ExceptionHandler
 import io.bifri.interview.cmp.padel.core.extensions.datetime.DateTimeUtils
-import io.bifri.interview.cmp.padel.core.location.CachedGeocoderService
-import io.bifri.interview.cmp.padel.core.location.Coordinates
-import io.bifri.interview.cmp.padel.core.location.GeocoderService
-import io.bifri.interview.cmp.padel.core.location.LocationService
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentResponseDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentsResponseDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentsResponseDto.TournamentDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.domain.mapper.TournamentsDomainMapper
+import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
+import io.bifri.interview.cmp.padel.feature.tournament.domain.repository.TournamentGeocoder
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -48,24 +45,21 @@ class GetTournamentsUseCaseTest {
             dateTimeUtils = DateTimeUtils(),
         )
 
-        val madridCoords = Coordinates(40.4168, -3.7038)
-        val locationService = FakeLocationService(madridCoords)
-        val delegate = TrackingGeocoderService(
+        val madridCoords = LocationCoordinates(40.4168, -3.7038)
+        val geocoder = TrackingTournamentGeocoder(
             mapOf(
-                "madrid|es" to Coordinates(40.4168, -3.7038),
-                "barcelona|es" to Coordinates(41.3851, 2.1734),
+                "madrid|es" to LocationCoordinates(40.4168, -3.7038),
+                "barcelona|es" to LocationCoordinates(41.3851, 2.1734),
             ),
         )
-        val geocoderService = CachedGeocoderService(delegate)
 
         val useCase = GetTournamentsUseCase(
             tournamentRepository = repository,
             mapper = mapper,
-            locationService = locationService,
-            geocoderService = geocoderService,
+            geocoder = geocoder,
         )
 
-        val result = useCase().first()
+        val result = useCase(flowOf(madridCoords)).first()
 
         assertEquals(2, result.size)
         assertEquals("Tournament Madrid", result[0].tournament.name)
@@ -87,36 +81,30 @@ class GetTournamentsUseCaseTest {
             dateTimeUtils = DateTimeUtils(),
         )
 
-        val locationFlow = MutableStateFlow<Coordinates?>(Coordinates(40.4168, -3.7038))
-        val locationService = FlowLocationService(locationFlow)
-        val delegate = TrackingGeocoderService(
+        val locationFlow = MutableStateFlow<LocationCoordinates?>(LocationCoordinates(40.4168, -3.7038))
+        val geocoder = TrackingTournamentGeocoder(
             mapOf(
-                "madrid|es" to Coordinates(40.4168, -3.7038),
-                "barcelona|es" to Coordinates(41.3851, 2.1734),
+                "madrid|es" to LocationCoordinates(40.4168, -3.7038),
+                "barcelona|es" to LocationCoordinates(41.3851, 2.1734),
             ),
         )
-        val geocoderService = CachedGeocoderService(delegate)
 
         val useCase = GetTournamentsUseCase(
             tournamentRepository = repository,
             mapper = mapper,
-            locationService = locationService,
-            geocoderService = geocoderService,
+            geocoder = geocoder,
         )
 
-        val firstResult = useCase().first()
+        val firstResult = useCase(locationFlow).first()
         assertEquals("Madrid 1", firstResult[0].tournament.name)
-        // Delegate should be called exactly twice (once for Barcelona, once for Madrid) despite 3 tournaments
-        assertEquals(2, delegate.callCount)
+        assertEquals(1, geocoder.callCount)
 
         // Update user location to Barcelona
-        locationFlow.value = Coordinates(41.3851, 2.1734)
+        locationFlow.value = LocationCoordinates(41.3851, 2.1734)
 
-        val secondResult = useCase().first()
+        val secondResult = useCase(locationFlow).first()
         assertEquals("Barcelona 1", secondResult[0].tournament.name)
         assertEquals("Barcelona 2", secondResult[1].tournament.name)
-        // Delegate call count should remain 2 because results were cached!
-        assertEquals(2, delegate.callCount)
     }
 
     @Test
@@ -132,27 +120,24 @@ class GetTournamentsUseCaseTest {
             dateTimeUtils = DateTimeUtils(),
         )
 
-        val initialCoords = Coordinates(40.4168000, -3.7038000)
+        val initialCoords = LocationCoordinates(40.4168000, -3.7038000)
         // Tiny offset (~1.1 meters)
-        val jitterCoords = Coordinates(40.4168010, -3.7038000)
+        val jitterCoords = LocationCoordinates(40.4168010, -3.7038000)
 
-        val locationFlow = MutableStateFlow<Coordinates?>(initialCoords)
-        val locationService = FlowLocationService(locationFlow)
-        val delegate = TrackingGeocoderService(
-            mapOf("madrid|es" to Coordinates(40.4168, -3.7038)),
+        val locationFlow = MutableStateFlow<LocationCoordinates?>(initialCoords)
+        val geocoder = TrackingTournamentGeocoder(
+            mapOf("madrid|es" to LocationCoordinates(40.4168, -3.7038)),
         )
-        val geocoderService = CachedGeocoderService(delegate)
 
         val useCase = GetTournamentsUseCase(
             tournamentRepository = repository,
             mapper = mapper,
-            locationService = locationService,
-            geocoderService = geocoderService,
+            geocoder = geocoder,
         )
 
         val emissions = mutableListOf<List<TournamentsTournamentWithDistance>>()
         val job = launch(Dispatchers.Unconfined) {
-            useCase().collect { emissions.add(it) }
+            useCase(locationFlow).collect { emissions.add(it) }
         }
 
         assertEquals(1, emissions.size)
@@ -162,7 +147,7 @@ class GetTournamentsUseCaseTest {
         assertEquals(1, emissions.size)
 
         // Significant location change (> 50m distance change) should trigger emission
-        locationFlow.value = Coordinates(41.3851, 2.1734)
+        locationFlow.value = LocationCoordinates(41.3851, 2.1734)
         assertEquals(2, emissions.size)
 
         job.cancel()
@@ -178,29 +163,25 @@ class GetTournamentsUseCaseTest {
         }
     }
 
-    private class FakeLocationService(
-        private val location: Coordinates?,
-    ) : LocationService {
-        override fun observeLocation(): Flow<Coordinates?> = flowOf(location)
-    }
-
-    private class FlowLocationService(
-        private val locationFlow: Flow<Coordinates?>,
-    ) : LocationService {
-        override fun observeLocation(): Flow<Coordinates?> = locationFlow
-    }
-
-    private class TrackingGeocoderService(
-        private val coordinatesMap: Map<String, Coordinates>,
-    ) : GeocoderService {
+    private class TrackingTournamentGeocoder(
+        private val coordinatesMap: Map<String, LocationCoordinates>,
+    ) : TournamentGeocoder {
         var callCount = 0
             private set
 
-        override suspend fun geocode(location: String?, country: String?): Coordinates? {
+        override suspend fun geocodeBatch(locations: List<Pair<String?, String?>>): Map<String, LocationCoordinates?> {
             callCount++
-            val key = listOfNotNull(location, country)
-                .joinToString("|") { it.trim().lowercase() }
-            return coordinatesMap[key]
+            return locations.associate { (location, country) ->
+                val key = buildLocationKey(location, country)
+                key to coordinatesMap[key]
+            }
+        }
+
+        override fun buildLocationKey(location: String?, country: String?): String {
+            val locStr = location?.trim()?.lowercase().orEmpty()
+            val countryStr = country?.trim()?.lowercase().orEmpty()
+            if (locStr.isBlank() && countryStr.isBlank()) return ""
+            return "$locStr|$countryStr"
         }
     }
 

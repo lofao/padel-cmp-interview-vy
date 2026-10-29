@@ -1,18 +1,18 @@
 package io.bifri.interview.cmp.padel.feature.tournament.domain.usecase
 
 import co.touchlab.kermit.Logger
-import io.bifri.interview.cmp.padel.core.location.CachedGeocoderService
-import io.bifri.interview.cmp.padel.core.location.Coordinates
-import io.bifri.interview.cmp.padel.core.location.LocationService
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.domain.mapper.TournamentsDomainMapper
+import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
+import io.bifri.interview.cmp.padel.feature.tournament.domain.repository.TournamentGeocoder
 import io.bifri.interview.cmp.padel.feature.tournament.domain.util.TournamentDistanceCalculator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlin.time.measureTimedValue
 
 /**
@@ -21,14 +21,15 @@ import kotlin.time.measureTimedValue
 class GetTournamentsUseCase(
     private val tournamentRepository: TournamentRepository,
     private val mapper: TournamentsDomainMapper,
-    private val locationService: LocationService,
-    private val geocoderService: CachedGeocoderService,
+    private val geocoder: TournamentGeocoder,
 ) {
     private val logger = Logger.withTag("GetTournamentsUseCase")
 
-    operator fun invoke(): Flow<List<TournamentsTournamentWithDistance>> = combine(
+    operator fun invoke(
+        userLocationFlow: Flow<LocationCoordinates?> = flowOf(null),
+    ): Flow<List<TournamentsTournamentWithDistance>> = combine(
         flow { emit(with(mapper) { tournamentRepository.getTournaments().toDomain() }) },
-        locationService.observeLocation().distinctUntilChanged { old, new ->
+        userLocationFlow.distinctUntilChanged { old, new ->
             !TournamentDistanceCalculator.isLocationChangeSignificant(old, new)
         },
         ::processTournamentsWithLocation,
@@ -36,7 +37,7 @@ class GetTournamentsUseCase(
 
     private suspend fun processTournamentsWithLocation(
         tournaments: List<TournamentsTournament>,
-        location: Coordinates?,
+        location: LocationCoordinates?,
     ): List<TournamentsTournamentWithDistance> {
         val (result, duration) = measureTimedValue {
             if (location == null) {
@@ -44,13 +45,13 @@ class GetTournamentsUseCase(
             }
 
             val locations = tournaments.map { it.location to it.country }
-            val geocodedMap = geocoderService.geocodeBatch(locations)
+            val geocodedMap = geocoder.geocodeBatch(locations)
 
             TournamentDistanceCalculator.sortByDistance(
                 tournaments = tournaments,
                 userLocation = location,
                 geocodedCoordinatesMap = geocodedMap,
-                locationKeyBuilder = geocoderService::buildLocationKey,
+                locationKeyBuilder = geocoder::buildLocationKey,
             )
         }
 

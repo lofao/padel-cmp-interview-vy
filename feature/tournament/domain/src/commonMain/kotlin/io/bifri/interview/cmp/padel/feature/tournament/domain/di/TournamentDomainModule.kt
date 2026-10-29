@@ -11,8 +11,7 @@ val TournamentDomainModule = module {
         GetTournamentsUseCase(
             tournamentRepository = get(),
             mapper = get(),
-            locationService = get(),
-            geocoderService = get(),
+            geocoder = get(),
         )
     }
     single { GetTournamentUseCase(tournamentRepository = get(), mapper = get()) }

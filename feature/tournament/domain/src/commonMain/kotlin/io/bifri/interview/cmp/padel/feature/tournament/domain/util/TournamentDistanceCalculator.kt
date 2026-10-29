@@ -1,6 +1,6 @@
 package io.bifri.interview.cmp.padel.feature.tournament.domain.util
 
-import io.bifri.interview.cmp.padel.core.location.Coordinates
+import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournament
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
 
@@ -12,7 +12,7 @@ object TournamentDistanceCalculator {
      * Determines whether a GPS coordinate update represents a significant change (> 50 meters)
      * rather than minor GPS drift/noise.
      */
-    fun isLocationChangeSignificant(old: Coordinates?, new: Coordinates?): Boolean = when {
+    fun isLocationChangeSignificant(old: LocationCoordinates?, new: LocationCoordinates?): Boolean = when {
         (old == null) && (new == null) -> false
         old == null -> true
         new == null -> true
@@ -25,8 +25,8 @@ object TournamentDistanceCalculator {
      */
     fun sortByDistance(
         tournaments: List<TournamentsTournament>,
-        userLocation: Coordinates?,
-        geocodedCoordinatesMap: Map<String, Coordinates?>,
+        userLocation: LocationCoordinates?,
+        geocodedCoordinatesMap: Map<String, LocationCoordinates?>,
         locationKeyBuilder: (String?, String?) -> String,
     ): List<TournamentsTournamentWithDistance> {
         if (userLocation == null) {
