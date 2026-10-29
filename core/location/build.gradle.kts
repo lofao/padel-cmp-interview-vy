@@ -9,6 +9,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.koin.compose)
         }
         androidMain.dependencies {

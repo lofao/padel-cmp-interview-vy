@@ -5,9 +5,10 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import org.koin.compose.koinInject
 
 @Composable
@@ -23,7 +24,7 @@ actual fun LocationPermissionEffect() {
         }
     }
 
-    LaunchedEffect(Unit) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         val hasFine = ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.ACCESS_FINE_LOCATION,
