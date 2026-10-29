@@ -7,6 +7,7 @@ plugins {
 kotlin {
     sourceSets {
         commonMain.dependencies {
+            api(projects.core.location)
             implementation(projects.core.network)
         }
     }

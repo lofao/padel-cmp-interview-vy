@@ -5,11 +5,9 @@ import com.hoc081098.flowext.throttleTime
 import io.bifri.interview.cmp.padel.core.coroutines.extension.mutableSharedFlowOfInput
 import io.bifri.interview.cmp.padel.core.coroutines.extension.stateInViewModel
 import io.bifri.interview.cmp.padel.core.exception.ExceptionHandler
-import io.bifri.interview.cmp.padel.core.location.LocationService
 import io.bifri.interview.cmp.padel.core.ui.Event
 import io.bifri.interview.cmp.padel.core.ui.base.BaseViewModel
 import io.bifri.interview.cmp.padel.core.ui.input.InputThrottle.DefaultSkipDuration
-import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.usecase.GetTournamentsUseCase
 import io.bifri.interview.cmp.padel.feature.tournament.ui.model.toUiModel
 import io.bifri.interview.cmp.padel.feature.tournament.ui.tournaments.TournamentsNavigationAction.OpenTournament
@@ -33,7 +31,6 @@ class TournamentsViewModel(
     coroutineDispatcher: CoroutineDispatcher,
     exceptionHandler: ExceptionHandler,
     private val getTournamentsUseCase: GetTournamentsUseCase,
-    private val locationService: LocationService,
 ) : BaseViewModel(coroutineDispatcher, exceptionHandler) {
     private val refreshes = mutableSharedFlowOfInput<Unit>()
     private val tournamentClicks = mutableSharedFlowOfInput<Long>()
@@ -89,10 +86,7 @@ class TournamentsViewModel(
     private fun dataStream() = refreshes
         .onStart { emit(Unit) }
         .flatMapLatest {
-            val userLocationFlow = locationService.observeLocation().map { coords ->
-                coords?.let { LocationCoordinates(it.latitude, it.longitude) }
-            }
-            getTournamentsUseCase(userLocationFlow)
+            getTournamentsUseCase()
                 .map { items -> items.map { it.toUiModel() } }
                 .map(::DataLoaded)
                 .onStart<TournamentsPartialState> { emit(DataLoading) }

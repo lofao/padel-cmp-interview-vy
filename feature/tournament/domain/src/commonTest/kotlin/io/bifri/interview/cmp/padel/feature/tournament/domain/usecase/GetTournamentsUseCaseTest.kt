@@ -2,15 +2,18 @@ package io.bifri.interview.cmp.padel.feature.tournament.domain.usecase
 
 import io.bifri.interview.cmp.padel.core.exception.ExceptionHandler
 import io.bifri.interview.cmp.padel.core.extensions.datetime.DateTimeUtils
+import io.bifri.interview.cmp.padel.core.location.Coordinates
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentResponseDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentsResponseDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.TournamentsResponseDto.TournamentDto
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
+import io.bifri.interview.cmp.padel.feature.tournament.data.repository.UserLocationRepository
 import io.bifri.interview.cmp.padel.feature.tournament.domain.mapper.TournamentsDomainMapper
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.LocationCoordinates
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
 import io.bifri.interview.cmp.padel.feature.tournament.domain.repository.TournamentGeocoder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -64,6 +67,45 @@ class GetTournamentsUseCaseTest {
         assertEquals(2, result.size)
         assertEquals("Tournament Madrid", result[0].tournament.name)
         assertEquals("Tournament Barcelona", result[1].tournament.name)
+    }
+
+    @Test
+    fun invoke_usesUserLocationRepositoryWhenNoLocationFlowProvided() = runBlocking {
+        val repository = FakeTournamentRepository(
+            tournaments = listOf(
+                TournamentDto(id = 1L, name = "Barcelona", location = "Barcelona", country = "ES"),
+                TournamentDto(id = 2L, name = "Madrid", location = "Madrid", country = "ES"),
+            ),
+        )
+
+        val mapper = TournamentsDomainMapper(
+            exceptionHandler = FakeExceptionHandler(),
+            dateTimeUtils = DateTimeUtils(),
+        )
+
+        val geocoder = TrackingTournamentGeocoder(
+            mapOf(
+                "madrid|es" to LocationCoordinates(40.4168, -3.7038),
+                "barcelona|es" to LocationCoordinates(41.3851, 2.1734),
+            ),
+        )
+
+        val userLocationRepo = FakeUserLocationRepository(
+            flowOf(Coordinates(40.4168, -3.7038)),
+        )
+
+        val useCase = GetTournamentsUseCase(
+            tournamentRepository = repository,
+            mapper = mapper,
+            geocoder = geocoder,
+            userLocationRepository = userLocationRepo,
+        )
+
+        val result = useCase().first()
+
+        assertEquals(2, result.size)
+        assertEquals("Madrid", result[0].tournament.name)
+        assertEquals("Barcelona", result[1].tournament.name)
     }
 
     @Test
@@ -161,6 +203,12 @@ class GetTournamentsUseCaseTest {
         override suspend fun getTournament(id: Long): TournamentResponseDto {
             error("Not implemented")
         }
+    }
+
+    private class FakeUserLocationRepository(
+        private val locationFlow: Flow<Coordinates?>,
+    ) : UserLocationRepository {
+        override fun observeUserLocation(): Flow<Coordinates?> = locationFlow
     }
 
     private class TrackingTournamentGeocoder(
