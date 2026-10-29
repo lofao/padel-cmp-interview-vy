@@ -2,6 +2,7 @@ package io.bifri.interview.cmp.padel.feature.tournament.domain.usecase
 
 import io.bifri.interview.cmp.padel.core.exception.ExceptionHandler
 import io.bifri.interview.cmp.padel.core.extensions.datetime.DateTimeUtils
+import io.bifri.interview.cmp.padel.core.location.CachedGeocoderService
 import io.bifri.interview.cmp.padel.core.location.Coordinates
 import io.bifri.interview.cmp.padel.core.location.GeocoderService
 import io.bifri.interview.cmp.padel.core.location.LocationService
@@ -49,12 +50,13 @@ class GetTournamentsUseCaseTest {
 
         val madridCoords = Coordinates(40.4168, -3.7038)
         val locationService = FakeLocationService(madridCoords)
-        val geocoderService = TrackingGeocoderService(
+        val delegate = TrackingGeocoderService(
             mapOf(
-                "Madrid, ES" to Coordinates(40.4168, -3.7038),
-                "Barcelona, ES" to Coordinates(41.3851, 2.1734),
+                "madrid|es" to Coordinates(40.4168, -3.7038),
+                "barcelona|es" to Coordinates(41.3851, 2.1734),
             ),
         )
+        val geocoderService = CachedGeocoderService(delegate)
 
         val useCase = GetTournamentsUseCase(
             tournamentRepository = repository,
@@ -87,12 +89,13 @@ class GetTournamentsUseCaseTest {
 
         val locationFlow = MutableStateFlow<Coordinates?>(Coordinates(40.4168, -3.7038))
         val locationService = FlowLocationService(locationFlow)
-        val geocoderService = TrackingGeocoderService(
+        val delegate = TrackingGeocoderService(
             mapOf(
-                "Madrid, ES" to Coordinates(40.4168, -3.7038),
-                "Barcelona, ES" to Coordinates(41.3851, 2.1734),
+                "madrid|es" to Coordinates(40.4168, -3.7038),
+                "barcelona|es" to Coordinates(41.3851, 2.1734),
             ),
         )
+        val geocoderService = CachedGeocoderService(delegate)
 
         val useCase = GetTournamentsUseCase(
             tournamentRepository = repository,
@@ -103,8 +106,8 @@ class GetTournamentsUseCaseTest {
 
         val firstResult = useCase().first()
         assertEquals("Madrid 1", firstResult[0].tournament.name)
-        // Geocoder should be called exactly twice (once for Barcelona, once for Madrid) despite 3 tournaments
-        assertEquals(2, geocoderService.callCount)
+        // Delegate should be called exactly twice (once for Barcelona, once for Madrid) despite 3 tournaments
+        assertEquals(2, delegate.callCount)
 
         // Update user location to Barcelona
         locationFlow.value = Coordinates(41.3851, 2.1734)
@@ -112,8 +115,8 @@ class GetTournamentsUseCaseTest {
         val secondResult = useCase().first()
         assertEquals("Barcelona 1", secondResult[0].tournament.name)
         assertEquals("Barcelona 2", secondResult[1].tournament.name)
-        // Geocoder call count should remain 2 because results were cached!
-        assertEquals(2, geocoderService.callCount)
+        // Delegate call count should remain 2 because results were cached!
+        assertEquals(2, delegate.callCount)
     }
 
     @Test
@@ -135,9 +138,10 @@ class GetTournamentsUseCaseTest {
 
         val locationFlow = MutableStateFlow<Coordinates?>(initialCoords)
         val locationService = FlowLocationService(locationFlow)
-        val geocoderService = TrackingGeocoderService(
-            mapOf("Madrid, ES" to Coordinates(40.4168, -3.7038)),
+        val delegate = TrackingGeocoderService(
+            mapOf("madrid|es" to Coordinates(40.4168, -3.7038)),
         )
+        val geocoderService = CachedGeocoderService(delegate)
 
         val useCase = GetTournamentsUseCase(
             tournamentRepository = repository,
@@ -194,7 +198,8 @@ class GetTournamentsUseCaseTest {
 
         override suspend fun geocode(location: String?, country: String?): Coordinates? {
             callCount++
-            val key = listOfNotNull(location, country).joinToString(", ")
+            val key = listOfNotNull(location, country)
+                .joinToString("|") { it.trim().lowercase() }
             return coordinatesMap[key]
         }
     }
