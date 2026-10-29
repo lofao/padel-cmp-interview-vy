@@ -11,6 +11,7 @@ import io.bifri.interview.cmp.padel.feature.tournament.data.datasource.model.Tou
 import io.bifri.interview.cmp.padel.feature.tournament.data.repository.TournamentRepository
 import io.bifri.interview.cmp.padel.feature.tournament.domain.mapper.TournamentsDomainMapper
 import io.bifri.interview.cmp.padel.feature.tournament.domain.model.TournamentsTournamentWithDistance
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -113,6 +114,54 @@ class GetTournamentsUseCaseTest {
         assertEquals("Barcelona 2", secondResult[1].tournament.name)
         // Geocoder call count should remain 2 because results were cached!
         assertEquals(2, geocoderService.callCount)
+    }
+
+    @Test
+    fun invoke_ignoresMinorLocationJitter() = runBlocking {
+        val repository = FakeTournamentRepository(
+            tournaments = listOf(
+                TournamentDto(id = 1L, name = "Madrid", location = "Madrid", country = "ES"),
+            ),
+        )
+
+        val mapper = TournamentsDomainMapper(
+            exceptionHandler = FakeExceptionHandler(),
+            dateTimeUtils = DateTimeUtils(),
+        )
+
+        val initialCoords = Coordinates(40.4168000, -3.7038000)
+        // Tiny offset (~1.1 meters)
+        val jitterCoords = Coordinates(40.4168010, -3.7038000)
+
+        val locationFlow = MutableStateFlow<Coordinates?>(initialCoords)
+        val locationService = FlowLocationService(locationFlow)
+        val geocoderService = TrackingGeocoderService(
+            mapOf("Madrid, ES" to Coordinates(40.4168, -3.7038)),
+        )
+
+        val useCase = GetTournamentsUseCase(
+            tournamentRepository = repository,
+            mapper = mapper,
+            locationService = locationService,
+            geocoderService = geocoderService,
+        )
+
+        val emissions = mutableListOf<List<TournamentsTournamentWithDistance>>()
+        val job = launch(Dispatchers.Unconfined) {
+            useCase().collect { emissions.add(it) }
+        }
+
+        assertEquals(1, emissions.size)
+
+        // Minor GPS noise (< 50m distance change) should be ignored
+        locationFlow.value = jitterCoords
+        assertEquals(1, emissions.size)
+
+        // Significant location change (> 50m distance change) should trigger emission
+        locationFlow.value = Coordinates(41.3851, 2.1734)
+        assertEquals(2, emissions.size)
+
+        job.cancel()
     }
 
     private class FakeTournamentRepository(

@@ -45,9 +45,18 @@ class GetTournamentsUseCase(
 
     operator fun invoke(): Flow<List<TournamentsTournamentWithDistance>> = combine(
         flow { emit(with(mapper) { tournamentRepository.getTournaments().toDomain() }) },
-        locationService.observeLocation().distinctUntilChanged(),
+        locationService.observeLocation().distinctUntilChanged { old, new ->
+            areLocationsEquivalent(old, new)
+        },
         ::processTournamentsWithLocation,
     )
+
+    private fun areLocationsEquivalent(old: Coordinates?, new: Coordinates?): Boolean {
+        if (old == null && new == null) return true
+        if (old == null || new == null) return false
+        // Ignore minor GPS noise/drift (< 50 meters = 0.05 km)
+        return old.distanceToKm(new) < MinimumDistanceChangeThresholdKm
+    }
 
     private suspend fun processTournamentsWithLocation(
         tournaments: List<TournamentsTournament>,
@@ -120,5 +129,9 @@ class GetTournamentsUseCase(
         val locStr = location?.trim()?.lowercase().orEmpty()
         val countryStr = country?.trim()?.lowercase().orEmpty()
         return "$locStr|$countryStr"
+    }
+
+    companion object {
+        private const val MinimumDistanceChangeThresholdKm = 0.05
     }
 }

@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber", "TooGenericExceptionCaught")
+@file:Suppress("MagicNumber")
 
 package io.bifri.interview.cmp.padel.core.location
 

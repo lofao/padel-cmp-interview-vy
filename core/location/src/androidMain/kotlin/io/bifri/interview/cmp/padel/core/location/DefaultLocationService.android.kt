@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber", "TooGenericExceptionCaught", "SwallowedException")
+@file:Suppress("MagicNumber")
 
 package io.bifri.interview.cmp.padel.core.location
 
@@ -14,6 +14,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.onEach
 class DefaultLocationService(
     private val context: Context,
 ) : LocationService {
+    private val logger = Logger.withTag("DefaultLocationService")
     private val permissionTrigger = MutableSharedFlow<Unit>(replay = 0, extraBufferCapacity = 1)
 
     override fun onPermissionUpdated() {
@@ -83,14 +85,16 @@ class DefaultLocationService(
             permissionJob.cancel()
             try {
                 context.unregisterReceiver(providerReceiver)
-            } catch (_: Exception) {
-                // Ignore cleanup errors
+            } catch (e: IllegalArgumentException) {
+                logger.w(e) { "Receiver was not registered during cleanup" }
             }
             if (isListenerRegistered) {
                 try {
                     locationManager.removeUpdates(listener)
-                } catch (_: Exception) {
-                    // Ignore cleanup errors
+                } catch (e: SecurityException) {
+                    logger.w(e) { "Security exception removing location updates" }
+                } catch (e: IllegalArgumentException) {
+                    logger.w(e) { "Listener was not registered when removing updates" }
                 }
             }
         }
@@ -131,9 +135,11 @@ class DefaultLocationService(
         } else {
             false
         }
-    } catch (_: SecurityException) {
+    } catch (e: SecurityException) {
+        logger.w(e) { "Security exception obtaining last known location" }
         false
-    } catch (_: Exception) {
+    } catch (e: IllegalArgumentException) {
+        logger.w(e) { "Invalid provider for last known location" }
         false
     }
 
@@ -173,12 +179,14 @@ class DefaultLocationService(
                 false
             }
         }
-    } catch (_: SecurityException) {
+    } catch (e: SecurityException) {
+        logger.w(e) { "Security exception requesting location updates" }
         if (!lastLocationSent) {
             trySend(null)
         }
         false
-    } catch (_: Exception) {
+    } catch (e: IllegalArgumentException) {
+        logger.w(e) { "Invalid provider or listener for location updates" }
         if (!lastLocationSent) {
             trySend(null)
         }

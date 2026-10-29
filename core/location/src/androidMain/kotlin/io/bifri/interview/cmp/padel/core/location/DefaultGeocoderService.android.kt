@@ -5,6 +5,8 @@ import android.location.Address
 import android.location.Geocoder
 import android.os.Build
 import androidx.annotation.RequiresApi
+import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -14,7 +16,9 @@ import kotlin.coroutines.resume
 class DefaultGeocoderService(
     private val context: Context,
 ) : BaseGeocoderService() {
-    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private val logger = Logger.withTag("DefaultGeocoderService")
+
+    @Suppress("TooGenericExceptionCaught")
     override suspend fun geocodePlatform(query: String): Coordinates? = try {
         val geocoder = Geocoder(context, Locale.getDefault())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -22,7 +26,10 @@ class DefaultGeocoderService(
         } else {
             geocodeLegacy(geocoder, query)
         }
-    } catch (_: Exception) {
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        logger.w(e) { "Geocoding failed for query: $query" }
         null
     }
 
